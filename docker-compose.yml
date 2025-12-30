@@ -22,7 +22,7 @@ services:
     image: mongo:latest
     container_name: mongo1
     ports:
-      - "27018:27017"   # 只暴露 mongo1 给宿主机使用（方便调试）
+      - "27018:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
@@ -36,7 +36,6 @@ services:
         chown mongodb:mongodb /etc/mongo-keyfile 2>/dev/null || true &&
         exec mongod --replSet rs0 --bind_ip_all --keyFile /etc/mongo-keyfile
       "
-
 
   mongo2:
     image: mongo:latest
@@ -71,9 +70,6 @@ services:
         chown mongodb:mongodb /etc/mongo-keyfile 2>/dev/null || true &&
         exec mongod --replSet rs0 --bind_ip_all --keyFile /etc/mongo-keyfile
       "
-
-
-
 
   # 3. 自动初始化副本集
   mongo_rs_init:
@@ -110,16 +106,17 @@ services:
       "
     restart: "no"
 
-
-  # 4. 同步服务 (Python)
   syncer_app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: syncer_app
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app
-      - ./state:/app/state  # 挂载状态文件，用于断点续传
+      - ./app:/app/app
+      - ./state:/app/state          # state 持久化
+      - ./configs:/app/configs      # configs 持久化（任务恢复需要）
     depends_on:
       - mysql_source
       - mongo1
@@ -127,7 +124,8 @@ services:
       - mongo3
       - mongo_rs_init
     environment:
-      PYTHONUNBUFFERED: 1
+      PYTHONUNBUFFERED: "1"
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 volumes:
   mysql_data:

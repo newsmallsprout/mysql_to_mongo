@@ -1,0 +1,424 @@
+# app/sync/worker.py
+import time
+import random
+import threading
+from typing import Optional, Dict, List, Any
+import ssl as _ssl
+from datetime import datetime as dt
+
+import pymysql
+from pymysql.cursors import SSDictCursor
+from pymysql.err import OperationalError as MySQLOperationalError
+
+from pymongo import MongoClient
+from pymongo.write_concern import WriteConcern
+from pymongo.operations import InsertOne, ReplaceOne, UpdateOne, UpdateMany
+
+from pymysqlreplication import BinLogStreamReader
+from pymysqlreplication.row_event import WriteRowsEvent, UpdateRowsEvent, DeleteRowsEvent
+
+from app.api.models import SyncTaskRequest
+from app.core.logging import log
+from app.core.uri import build_mongo_uri
+from app.core.state_store import load_state, save_state
+from app.sync.convert import Converter
+from app.sync.mongo_writer import MongoWriter
+from app.sync.mysql_introspector import MySQLIntrospector
+from app.sync.flush_buffer import FlushBuffer
+
+
+class SyncWorker:
+    def __init__(self, cfg: SyncTaskRequest):
+        self.cfg = cfg
+        self.stop_event = threading.Event()
+        self.stream: Optional[BinLogStreamReader] = None
+
+        # --- mysql settings ---
+        self.mysql_settings = {
+            "host": cfg.mysql_conf.host,
+            "port": int(cfg.mysql_conf.port or 3306),
+            "user": cfg.mysql_conf.user,
+            "passwd": cfg.mysql_conf.password,
+            "db": cfg.mysql_conf.database,
+            "charset": cfg.mysql_conf.charset,
+            "cursorclass": SSDictCursor,
+            "connect_timeout": int(cfg.mysql_connect_timeout or 10),
+            "read_timeout": int(cfg.mysql_read_timeout or 60),
+            "write_timeout": int(cfg.mysql_write_timeout or 60),
+        }
+
+        if cfg.mysql_conf.use_ssl:
+            ssl_args = {}
+            if cfg.mysql_conf.ssl_ca:
+                ssl_args["ca"] = cfg.mysql_conf.ssl_ca
+            if cfg.mysql_conf.ssl_cert:
+                ssl_args["cert"] = cfg.mysql_conf.ssl_cert
+            if cfg.mysql_conf.ssl_key:
+                ssl_args["key"] = cfg.mysql_conf.ssl_key
+
+            if not cfg.mysql_conf.ssl_verify_cert:
+                ssl_args["check_hostname"] = False
+                ssl_args["verify_mode"] = _ssl.CERT_NONE
+            else:
+                ssl_args["verify_mode"] = _ssl.CERT_REQUIRED
+
+            self.mysql_settings["ssl"] = ssl_args
+
+        # --- mongo ---
+        mongo_uri = build_mongo_uri(cfg.mongo_conf)
+        self.mongo = MongoClient(
+            mongo_uri,
+            maxPoolSize=int(cfg.mongo_max_pool_size or 50),
+            minPoolSize=0,
+            connect=False,
+            retryWrites=True,
+            socketTimeoutMS=int(cfg.mongo_socket_timeout_ms or 20000),
+            connectTimeoutMS=int(cfg.mongo_connect_timeout_ms or 10000),
+        )
+        self.mongo_db = self.mongo[cfg.mongo_conf.database or "sync_db"]
+
+        # --- helper objects ---
+        self.converter = Converter(cfg.pk_field, cfg.use_pk_as_mongo_id, dec_scale=18)
+        self.mysql_introspector = MySQLIntrospector(
+            task_id=cfg.task_id,
+            mysql_settings=self.mysql_settings,
+            pk_field=cfg.pk_field,
+            unknown_col_fix_enabled=cfg.unknown_col_fix_enabled,
+            unknown_col_schema_cache_sec=cfg.unknown_col_schema_cache_sec,
+            auto_discover_only_base_table=cfg.auto_discover_only_base_table,
+            converter=self.converter,
+        )
+        self.mongo_writer = MongoWriter(cfg.task_id, self.stop_event)
+
+        self._last_state_save_ts = 0.0
+        self._last_progress_ts = 0.0
+
+        self._auto_mode = (not bool(cfg.table_map))
+        self._table_refresh_ts_holder = {"ts": 0.0}
+
+    def stop(self):
+        self.stop_event.set()
+        try:
+            if self.stream is not None:
+                self.stream.close()
+        except Exception:
+            pass
+
+    # -------------------------
+    # basic helpers
+    # -------------------------
+    def _maybe_save_state(self, log_file: str, log_pos: int):
+        now = time.time()
+        interval = max(1, int(self.cfg.state_save_interval_sec or 2))
+        if now - self._last_state_save_ts >= interval:
+            if log_file and log_pos:
+                save_state(self.cfg.task_id, log_file, log_pos)
+            self._last_state_save_ts = now
+
+    def _maybe_progress_log(self, msg: str):
+        now = time.time()
+        interval = max(1, int(self.cfg.progress_interval or 10))
+        if now - self._last_progress_ts >= interval:
+            log(self.cfg.task_id, msg)
+            self._last_progress_ts = now
+
+    def _auto_build_table_map_if_needed(self):
+        if self.cfg.table_map:
+            return
+        tables = self.mysql_introspector.list_tables()
+        self.cfg.table_map = {t: t + self.cfg.collection_suffix for t in tables}
+        log(self.cfg.task_id, f"Auto table_map built size={len(self.cfg.table_map)}")
+
+    def _maybe_refresh_table_map(self, reason: str = ""):
+        self.mysql_introspector.refresh_table_map_if_needed(
+            table_map=self.cfg.table_map,
+            collection_suffix=self.cfg.collection_suffix,
+            auto_mode=self._auto_mode,
+            auto_discover_new_tables=self.cfg.auto_discover_new_tables,
+            auto_discover_interval_sec=self.cfg.auto_discover_interval_sec,
+            last_refresh_ts_holder=self._table_refresh_ts_holder,
+            reason=reason,
+        )
+
+    # =========================
+    # 主流程
+    # =========================
+    def run(self):
+        log(self.cfg.task_id, f"Task started (HardDelete={self.cfg.hard_delete})")
+        try:
+            self._auto_build_table_map_if_needed()
+            state = load_state(self.cfg.task_id)
+
+            if not state:
+                self.do_full_sync()
+                self.do_inc_sync_with_reconnect(None, None)
+            else:
+                self.do_inc_sync_with_reconnect(state.get("log_file"), state.get("log_pos"))
+        except Exception as e:
+            log(self.cfg.task_id, f"CRASH {type(e).__name__}: {str(e)[:300]}")
+
+    def do_full_sync(self):
+        """
+        全量同步写入 base 文档（_id=pk），使用 upsert，避免重复跑 11000。
+        注意：全量阶段不会写 version 文档（version 只在 UPDATE 事件时产生）。
+        """
+        mysql_batch = int(self.cfg.mysql_fetch_batch or 2000)
+        mongo_batch = int(self.cfg.mongo_bulk_batch or 2000)
+        pk = self.cfg.pk_field
+        write_concern = WriteConcern(w=int(self.cfg.mongo_write_w or 1), j=bool(self.cfg.mongo_write_j))
+
+        conn = pymysql.connect(**self.mysql_settings)
+        try:
+            with conn.cursor() as c:
+                for table, coll_name in self.cfg.table_map.items():
+                    if self.stop_event.is_set():
+                        break
+
+                    coll = self.mongo_db.get_collection(coll_name, write_concern=write_concern)
+                    processed = 0
+                    last_id = None
+                    ops: List = []
+                    start = time.time()
+                    log(self.cfg.task_id, f"FullSync table={table} -> collection={coll_name}")
+
+                    while not self.stop_event.is_set():
+                        if last_id is None:
+                            c.execute(f"SELECT * FROM `{table}` ORDER BY `{pk}` LIMIT %s", (mysql_batch,))
+                        else:
+                            c.execute(
+                                f"SELECT * FROM `{table}` WHERE `{pk}` > %s ORDER BY `{pk}` LIMIT %s",
+                                (last_id, mysql_batch),
+                            )
+                        rows = c.fetchall()
+                        if not rows:
+                            break
+
+                        for r in rows:
+                            if pk in r:
+                                last_id = r[pk]
+
+                            doc = self.converter.row_to_base_doc(r)
+                            if self.cfg.use_pk_as_mongo_id and "_id" in doc:
+                                ops.append(ReplaceOne({"_id": doc["_id"]}, doc, upsert=True))
+                            else:
+                                ops.append(InsertOne(doc))
+
+                            processed += 1
+                            if len(ops) >= mongo_batch:
+                                self.mongo_writer.safe_bulk_write(coll, ops, table, coll_name)
+                                ops.clear()
+
+                        self._maybe_progress_log(f"FullSync prog table={table} done={processed}")
+
+                    if ops:
+                        self.mongo_writer.safe_bulk_write(coll, ops, table, coll_name)
+                        ops.clear()
+
+                    elapsed = max(1e-6, time.time() - start)
+                    speed = int(processed / elapsed)
+                    log(self.cfg.task_id, f"FullSync done table={table} count={processed} speed={speed}/s")
+        finally:
+            conn.close()
+
+    def do_inc_sync_with_reconnect(self, log_file, log_pos):
+        retry = 0
+        backoff = float(self.cfg.inc_reconnect_backoff_base_sec or 1.0)
+        backoff_max = float(self.cfg.inc_reconnect_backoff_max_sec or 30.0)
+
+        state = load_state(self.cfg.task_id) or {}
+        cur_log_file = log_file or state.get("log_file")
+        cur_log_pos = log_pos or state.get("log_pos")
+
+        while not self.stop_event.is_set():
+            try:
+                self.do_inc_sync_once(cur_log_file, cur_log_pos)
+                break
+            except MySQLOperationalError as e:
+                retry += 1
+                state = load_state(self.cfg.task_id) or {}
+                cur_log_file = state.get("log_file", cur_log_file)
+                cur_log_pos = state.get("log_pos", cur_log_pos)
+                log(self.cfg.task_id, f"MySQL OpErr. retry={retry} err={str(e)[:200]}")
+            except Exception as e:
+                retry += 1
+                state = load_state(self.cfg.task_id) or {}
+                cur_log_file = state.get("log_file", cur_log_file)
+                cur_log_pos = state.get("log_pos", cur_log_pos)
+                log(self.cfg.task_id, f"IncSync crash. retry={retry} {type(e).__name__}: {str(e)[:200]}")
+
+            max_retry = int(self.cfg.inc_reconnect_max_retry or 0)
+            if max_retry > 0 and retry >= max_retry:
+                log(self.cfg.task_id, "IncSync stopped after max retries")
+                break
+
+            sleep_sec = min(backoff_max, backoff) + random.random() * 0.2
+            log(self.cfg.task_id, f"Reconnect after {sleep_sec:.2f}s from {cur_log_file}:{cur_log_pos}")
+            time.sleep(sleep_sec)
+            backoff = min(backoff_max, backoff * 2)
+
+    def do_inc_sync_once(self, log_file, log_pos):
+        """
+        增量语义（按你需求）：
+        - INSERT：写 base 文档（_id=pk），用 upsert（幂等）
+        - UPDATE：新增 version 文档（新 _id），不改 base
+        - DELETE：只给 base 打删除标识（软删除）
+        并且定时 flush：即使没有新事件，也会落库。
+        """
+        write_concern = WriteConcern(w=int(self.cfg.mongo_write_w or 1), j=bool(self.cfg.mongo_write_j))
+
+        only_events = [WriteRowsEvent]
+        if not self.cfg.insert_only:
+            only_events.append(UpdateRowsEvent)
+        if self.cfg.handle_deletes:
+            only_events.append(DeleteRowsEvent)
+
+        self.stream = BinLogStreamReader(
+            connection_settings={k: v for k, v in self.mysql_settings.items() if k != "cursorclass"},
+            server_id=100 + int(time.time() % 100) + random.randint(0, 1000),
+            log_file=log_file,
+            log_pos=log_pos,
+            blocking=True,
+            resume_stream=True,
+            only_events=only_events,
+        )
+
+        inc_batch = int(self.cfg.inc_flush_batch or 2000)
+        flush_interval = max(1, int(self.cfg.inc_flush_interval_sec or 2))
+
+        log(self.cfg.task_id, f"IncSync started events={[e.__name__ for e in only_events]} from={log_file}:{log_pos}")
+        log(
+            self.cfg.task_id,
+            f"Mode: UPDATE->newDoc={self.cfg.update_insert_new_doc}, DELETE->softMarkBaseOnly={self.cfg.delete_mark_only_base_doc}, hard_delete={self.cfg.hard_delete}",
+        )
+
+        def writer_func(coll_name: str, ops: List):
+            coll = self.mongo_db.get_collection(coll_name, write_concern=write_concern)
+            self.mongo_writer.safe_bulk_write(coll, ops, table="*", coll_name=coll_name)
+
+        def on_flush_done():
+            try:
+                self._maybe_save_state(getattr(self.stream, "log_file", None), getattr(self.stream, "log_pos", None))
+            except Exception:
+                pass
+
+        buf = FlushBuffer(
+            batch_size=inc_batch,
+            flush_interval_sec=flush_interval,
+            writer_func=writer_func,
+            on_flush_done=on_flush_done,
+            stop_event=self.stop_event,
+        )
+        buf.start()
+
+        try:
+            for ev in self.stream:
+                if self.stop_event.is_set():
+                    break
+
+                table = ev.table
+                if self.cfg.debug_binlog_events:
+                    log(self.cfg.task_id, f"EV {type(ev).__name__} table={table}")
+
+                if table not in self.cfg.table_map:
+                    self._maybe_refresh_table_map(reason=f"unknown:{table}")
+                    if table not in self.cfg.table_map:
+                        continue
+
+                coll_name = self.cfg.table_map[table]
+
+                # ---------------- Insert: base upsert ----------------
+                if isinstance(ev, WriteRowsEvent):
+                    for row in ev.rows:
+                        data = row.get("values")
+                        data = self.mysql_introspector.maybe_fix_row_unknown_cols(table, data)
+                        if not data:
+                            continue
+
+                        doc = self.converter.row_to_base_doc(data)
+                        if self.cfg.use_pk_as_mongo_id and "_id" in doc:
+                            buf.add(coll_name, ReplaceOne({"_id": doc["_id"]}, doc, upsert=True))
+                        else:
+                            buf.add(coll_name, InsertOne(doc))
+
+                # ---------------- Update: new version doc ----------------
+                elif isinstance(ev, UpdateRowsEvent):
+                    for row in ev.rows:
+                        data = row.get("after_values")
+                        data = self.mysql_introspector.maybe_fix_row_unknown_cols(table, data)
+                        if not data:
+                            continue
+
+                        pk_val = self.mysql_introspector.extract_pk(table, data)
+                        if pk_val is None:
+                            log(self.cfg.task_id, f"Update skipped (no pk) table={table} keys={list(data.keys())[:8]}")
+                            continue
+
+                        base_id = pk_val  # use_pk_as_mongo_id 下 base _id=pk
+                        if self.cfg.handle_updates_as_insert and not self.cfg.update_insert_new_doc:
+                            # 兼容旧配置：update 当 insert（不推荐）
+                            doc = self.converter.row_to_base_doc(data)
+                            buf.add(coll_name, InsertOne(doc))
+                        else:
+                            if self.cfg.update_insert_new_doc:
+                                vdoc = self.converter.row_to_version_doc(data, pk_val=pk_val, base_id=base_id)
+                                buf.add(coll_name, InsertOne(vdoc))
+                            else:
+                                doc = self.converter.row_to_base_doc(data)
+                                if self.cfg.use_pk_as_mongo_id and "_id" in doc:
+                                    buf.add(coll_name, ReplaceOne({"_id": doc["_id"]}, doc, upsert=True))
+                                else:
+                                    buf.add(coll_name, InsertOne(doc))
+
+                # ---------------- Delete: soft mark base doc only ----------------
+                elif isinstance(ev, DeleteRowsEvent) and self.cfg.handle_deletes:
+                    for row in ev.rows:
+                        data = row.get("values")
+                        data = self.mysql_introspector.maybe_fix_row_unknown_cols(table, data)
+                        if not data:
+                            continue
+
+                        pk_val = self.mysql_introspector.extract_pk(table, data)
+                        if pk_val is None:
+                            log(self.cfg.task_id, f"Delete skipped (no pk) table={table} keys={list(data.keys())[:8]}")
+                            continue
+
+                        set_doc = {
+                            self.cfg.delete_flag_field: True,
+                            self.cfg.delete_time_field: dt.utcnow(),
+                            "_op": "delete",
+                            "_ts": dt.utcnow(),
+                        }
+
+                        # 强制软删除语义（忽略 hard_delete=True 的误配）
+                        if self.cfg.delete_mark_only_base_doc:
+                            buf.add(
+                                coll_name,
+                                UpdateOne({"_id": pk_val}, {"$set": set_doc}, upsert=self.cfg.delete_upsert_tombstone),
+                            )
+                        else:
+                            buf.add(coll_name, UpdateMany({self.cfg.pk_field: pk_val}, {"$set": set_doc}, upsert=False))
+                            buf.add(
+                                coll_name,
+                                UpdateOne({"_id": pk_val}, {"$set": set_doc}, upsert=self.cfg.delete_upsert_tombstone),
+                            )
+
+                buf.flush_if_reach_batch()
+                buf.flush(force=False)
+
+        finally:
+            try:
+                buf.stop()
+            except Exception:
+                pass
+
+            try:
+                if self.stream is not None:
+                    try:
+                        self._maybe_save_state(getattr(self.stream, "log_file", None), getattr(self.stream, "log_pos", None))
+                    except Exception:
+                        pass
+                    self.stream.close()
+            except Exception:
+                pass
+
+            log(self.cfg.task_id, "IncSync stopped (once)")
