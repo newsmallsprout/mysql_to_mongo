@@ -83,3 +83,15 @@ class Converter:
         doc["_op"] = "update"
         doc["_ts"] = dt.utcnow()
         return doc
+
+    def row_to_delete_doc(self, row: Dict[str, Any], pk_val: Any, base_id: Any) -> Dict[str, Any]:
+        doc: Dict[str, Any] = {}
+        for k, v in row.items():
+            doc[k] = self.convert_value(v)
+        doc["_id"] = ObjectId()
+        doc[self.pk_field] = pk_val
+        doc["_base_id"] = base_id
+        doc["_is_delete"] = True
+        doc["_op"] = "delete"
+        doc["_ts"] = dt.utcnow()
+        return doc

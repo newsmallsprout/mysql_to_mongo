@@ -88,6 +88,7 @@ class SyncTaskRequest(BaseModel):
     delete_flag_field: str = "deleted"
     delete_time_field: str = "deleted_at"
     delete_upsert_tombstone: bool = True
+    delete_append_new_doc: bool = True
 
     # ====== 核心需求 ======
     update_insert_new_doc: bool = True

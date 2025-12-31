@@ -382,25 +382,27 @@ class SyncWorker:
                             log(self.cfg.task_id, f"Delete skipped (no pk) table={table} keys={list(data.keys())[:8]}")
                             continue
 
-                        set_doc = {
-                            self.cfg.delete_flag_field: True,
-                            self.cfg.delete_time_field: dt.utcnow(),
-                            "_op": "delete",
-                            "_ts": dt.utcnow(),
-                        }
-
-                        # 强制软删除语义（忽略 hard_delete=True 的误配）
-                        if self.cfg.delete_mark_only_base_doc:
-                            buf.add(
-                                coll_name,
-                                UpdateOne({"_id": pk_val}, {"$set": set_doc}, upsert=self.cfg.delete_upsert_tombstone),
-                            )
+                        if self.cfg.delete_append_new_doc:
+                            vdoc = self.converter.row_to_delete_doc(data, pk_val=pk_val, base_id=pk_val)
+                            buf.add(coll_name, InsertOne(vdoc))
                         else:
-                            buf.add(coll_name, UpdateMany({self.cfg.pk_field: pk_val}, {"$set": set_doc}, upsert=False))
-                            buf.add(
-                                coll_name,
-                                UpdateOne({"_id": pk_val}, {"$set": set_doc}, upsert=self.cfg.delete_upsert_tombstone),
-                            )
+                            set_doc = {
+                                self.cfg.delete_flag_field: True,
+                                self.cfg.delete_time_field: dt.utcnow(),
+                                "_op": "delete",
+                                "_ts": dt.utcnow(),
+                            }
+                            if self.cfg.delete_mark_only_base_doc:
+                                buf.add(
+                                    coll_name,
+                                    UpdateOne({"_id": pk_val}, {"$set": set_doc}, upsert=self.cfg.delete_upsert_tombstone),
+                                )
+                            else:
+                                buf.add(coll_name, UpdateMany({self.cfg.pk_field: pk_val}, {"$set": set_doc}, upsert=False))
+                                buf.add(
+                                    coll_name,
+                                    UpdateOne({"_id": pk_val}, {"$set": set_doc}, upsert=self.cfg.delete_upsert_tombstone),
+                                )
 
                 buf.flush_if_reach_batch()
                 buf.flush(force=False)

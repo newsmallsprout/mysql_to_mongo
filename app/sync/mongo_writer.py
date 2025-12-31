@@ -13,22 +13,25 @@ class MongoWriter:
         self.task_id = task_id
         self.stop_event = stop_event
 
-    def _summarize_bulk_error(self, table: str, coll_name: str, e: BulkWriteError, max_samples: int = 3) -> List[dict]:
-        details = e.details or {}
-        write_errors = details.get("writeErrors", []) or []
+    def _log_bulk_error(self, table: str, coll_name: str, write_errors: List[dict], max_samples: int = 3):
         code_counter = Counter()
         samples = []
+        # Count all codes
+        for w in write_errors:
+            code = w.get("code")
+            code_counter[code] += 1
+
+        # Sample messages
         for w in write_errors[:max_samples]:
             code = w.get("code")
             msg = (w.get("errmsg") or "")[:180]
             idx = w.get("index")
-            code_counter[code] += 1
             samples.append(f"idx={idx} code={code} msg={msg}")
+
         log(
             self.task_id,
             f"BulkWriteError t={table} c={coll_name} errors={len(write_errors)} codes={dict(code_counter)} samples={samples}",
         )
-        return write_errors
 
     def safe_bulk_write(self, coll, ops: List, table: str, coll_name: str, max_retry: int = 6) -> bool:
         if not ops:
@@ -42,10 +45,15 @@ class MongoWriter:
                 coll.bulk_write(ops, ordered=False)
                 return True
             except BulkWriteError as e:
-                write_errors = self._summarize_bulk_error(table, coll_name, e)
+                details = e.details or {}
+                write_errors = details.get("writeErrors", []) or []
+
                 only_dup = (len(write_errors) > 0) and all(w.get("code") == 11000 for w in write_errors)
                 if only_dup:
                     return True
+
+                self._log_bulk_error(table, coll_name, write_errors)
+
                 has_215 = any(w.get("code") == 215 for w in write_errors)
                 if not has_215:
                     return False
