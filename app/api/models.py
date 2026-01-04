@@ -3,6 +3,24 @@ from typing import Optional, Dict, List
 from pydantic import BaseModel, Field
 
 
+class ConnectionConfig(BaseModel):
+    id: str
+    name: str
+    type: str  # "mysql" or "mongo"
+    host: str
+    port: int
+    user: str
+    password: str
+    database: Optional[str] = None
+    
+    # Mongo specific
+    auth_source: Optional[str] = "admin"
+    replica_set: Optional[str] = None
+    hosts: Optional[List[str]] = None
+    
+    # MySQL specific
+    use_ssl: bool = False
+
 class DBConfig(BaseModel):
     host: Optional[str] = None
     port: Optional[int] = None

@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MySQL to Mongo Sync</title>
+    <!-- 预连接加速 CDN -->
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <!-- Vue 3（生产版） -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <!-- Element Plus -->
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+    <script src="https://unpkg.com/element-plus"></script>
+    <!-- Icons -->
+    <script src="https://unpkg.com/@element-plus/icons-vue"></script>
+    <!-- ECharts -->
+    <script src="https://unpkg.com/echarts/dist/echarts.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; height: 100vh; overflow: hidden; }
+        #app { height: 100%; display: flex; }
+        .el-aside { background-color: #304156; color: #fff; transition: width 0.3s; width: 220px; display: flex; flex-direction: column; }
+        .logo { height: 60px; line-height: 60px; text-align: center; font-size: 18px; font-weight: bold; background-color: #2b3649; color: #fff; border-bottom: 1px solid #1f2d3d; }
+        .el-menu { border-right: none; background-color: transparent; }
+        .el-menu-item { color: #bfcbd9; }
+        .el-menu-item:hover, .el-menu-item.is-active { background-color: #263445; color: #409EFF; }
+        .el-main { background-color: #f0f2f5; padding: 20px; overflow-y: auto; height: 100vh; box-sizing: border-box; }
+        .page-header { background: #fff; padding: 15px 20px; margin: -20px -20px 20px -20px; box-shadow: 0 1px 4px rgba(0,21,41,.08); display: flex; justify-content: space-between; align-items: center; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; }
+        .metric-item { margin-bottom: 8px; font-size: 14px; color: #606266; display: flex; justify-content: space-between; }
+        .metric-label { font-weight: 500; color: #303133; }
+        .section-title { font-size: 16px; font-weight: bold; margin: 20px 0 10px; padding-left: 10px; border-left: 4px solid #409EFF; }
+        .mapping-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .mode-group .el-radio { display: block; margin-bottom: 6px; }
+        .mode-desc { margin: 4px 0 12px 26px; color: #909399; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Sidebar -->
+        <el-aside>
+            <div class="logo">Sync Platform</div>
+            <el-menu :default-active="currentView" @select="handleMenuSelect" text-color="#bfcbd9" active-text-color="#409EFF" background-color="#304156">
+                <el-menu-item index="dashboard">
+                    <el-icon><Odometer /></el-icon>
+                    <span>Dashboard</span>
+                </el-menu-item>
+                <el-menu-item index="tasks">
+                    <el-icon><List /></el-icon>
+                    <span>Task Management</span>
+                </el-menu-item>
+                <el-menu-item index="connections">
+                    <el-icon><Connection /></el-icon>
+                    <span>Data Sources</span>
+                </el-menu-item>
+            </el-menu>
+        </el-aside>
+
+        <!-- Main Content -->
+        <el-main>
+            <!-- DASHBOARD VIEW -->
+            <div v-if="currentView === 'dashboard'">
+                <div class="page-header">
+                    <h2>Dashboard</h2>
+                    <el-button type="primary" @click="currentView = 'tasks'; showCreateDialog()">
+                        <el-icon style="margin-right: 5px"><Plus /></el-icon> New Task
+                    </el-button>
+                </div>
+
+                <el-row :gutter="20">
+                    <el-col :span="24" v-if="tasks.length === 0">
+                        <el-empty description="No active tasks. Go to Task Management to create one."></el-empty>
+                    </el-col>
+                    <el-col :span="8" v-for="task in tasks" :key="task.task_id" style="margin-bottom: 20px;">
+                        <el-card shadow="hover">
+                            <template #header>
+                                <div class="card-header">
+                                    <span style="font-weight: bold;">{{ task.task_id }}</span>
+                                    <el-tag :type="getStatusType(task.status)">{{ task.status.toUpperCase() }}</el-tag>
+                                </div>
+                            </template>
+                            <div class="metric-item">
+                                <span class="metric-label">Phase</span>
+                                <span>{{ task.metrics.phase }}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Processed</span>
+                                <span>{{ task.metrics.processed_count }}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Binlog</span>
+                                <el-tooltip :content="task.metrics.binlog_file + ':' + task.metrics.binlog_pos" placement="top">
+                                    <span style="cursor: pointer; border-bottom: 1px dashed #999;">{{ task.metrics.binlog_pos }}</span>
+                                </el-tooltip>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Last Update</span>
+                                <span>{{ formatTime(task.metrics.last_update) }}</span>
+                            </div>
+                            <div v-if="task.metrics.error" style="margin-top: 10px; padding: 8px; background-color: #fef0f0; border-radius: 4px; font-size: 12px; color: #f56c6c;">
+                                {{ task.metrics.error }}
+                            </div>
+                            <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                <el-button type="primary" size="small" @click="viewLogs(task.task_id)">Logs</el-button>
+                                <el-button type="success" size="small" @click="openStats(task.task_id)">Stats</el-button>
+                                <el-button v-if="task.status === 'running'" type="warning" size="small" @click="confirmStop(task.task_id)">Stop</el-button>
+                                <el-button v-else type="success" size="small" @click="confirmStart(task.task_id)">Start</el-button>
+                                <el-button type="info" size="small" :disabled="task.status !== 'stopped'" @click="confirmResetAndStart(task.task_id)">Reset</el-button>
+                                <el-button type="danger" size="small" @click="confirmDelete(task.task_id)">Delete</el-button>
+                            </div>
+                        </el-card>
+                    </el-col>
+                </el-row>
+            </div>
+
+            <!-- TASKS VIEW -->
+            <div v-if="currentView === 'tasks'">
+                <div class="page-header">
+                    <h2>Task Management</h2>
+                    <el-button type="primary" @click="showCreateDialog">
+                        <el-icon style="margin-right: 5px"><Plus /></el-icon> Create Task
+                    </el-button>
+                </div>
+                
+                <el-table :data="tasks" style="width: 100%" border>
+                    <el-table-column prop="task_id" label="Task ID" width="180"></el-table-column>
+                    <el-table-column prop="status" label="Status" width="120">
+                        <template #default="scope">
+                            <el-tag :type="getStatusType(scope.row.status)">{{ scope.row.status }}</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="Source -> Target">
+                        <template #default="scope">
+                            {{ scope.row.config.mysql }} <el-icon><Right /></el-icon> {{ scope.row.config.mongo }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="Tables">
+                         <template #default="scope">
+                            <span>{{ truncateTables(scope.row.config.tables) }}</span>
+                            <el-button type="primary" link size="small" style="margin-left:6px" @click="openTables(scope.row.task_id)">查看全表</el-button>
+                         </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+
+            <!-- CONNECTIONS VIEW -->
+            <div v-if="currentView === 'connections'">
+                <div class="page-header">
+                    <h2>Data Sources</h2>
+                    <el-button type="primary" @click="showConnDialog">
+                        <el-icon style="margin-right: 5px"><Plus /></el-icon> Add Connection
+                    </el-button>
+                </div>
+
+                <el-table :data="connections" style="width: 100%" border>
+                    <el-table-column prop="id" label="ID" width="150"></el-table-column>
+                    <el-table-column prop="name" label="Name" width="180"></el-table-column>
+                    <el-table-column prop="type" label="Type" width="100">
+                        <template #default="scope">
+                            <el-tag :type="scope.row.type === 'mysql' ? 'primary' : 'success'">{{ scope.row.type }}</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="Connection Info">
+                        <template #default="scope">
+                            {{ scope.row.user }}@{{ scope.row.host }}:{{ scope.row.port }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="Actions" width="160" align="center">
+                        <template #default="scope">
+                            <el-button type="primary" circle size="small" style="margin-right:6px" @click="editConnection(scope.row.id)"><el-icon><Edit /></el-icon></el-button>
+                            <el-popconfirm title="Delete this connection?" @confirm="deleteConnection(scope.row.id)">
+                                <template #reference>
+                                    <el-button type="danger" circle size="small"><el-icon><Delete /></el-icon></el-button>
+                                </template>
+                            </el-popconfirm>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+
+        </el-main>
+
+        <!-- CREATE TASK DIALOG -->
+        <el-dialog v-model="createVisible" title="Create Sync Task" width="900px" destroy-on-close>
+            <el-steps :active="activeStep" finish-status="success" simple style="margin-bottom: 20px;">
+                <el-step title="Info"></el-step>
+                <el-step title="MySQL"></el-step>
+                <el-step title="Mongo"></el-step>
+                <el-step title="Mapping"></el-step>
+            </el-steps>
+
+            <el-form :model="form" label-width="120px" label-position="left">
+                <!-- Step 1 -->
+                <div v-show="activeStep === 0">
+                    <el-form-item label="Task ID" required>
+                        <el-input v-model="form.task_id"></el-input>
+                    </el-form-item>
+                </div>
+
+                <!-- Step 2: MySQL Source -->
+                <div v-show="activeStep === 1">
+                    <div class="section-title">Select MySQL Source</div>
+                    <el-radio-group v-model="sourceSelectionMode" style="margin-bottom: 20px;">
+                        <el-radio-button label="saved">Saved Connection</el-radio-button>
+                        <el-radio-button label="manual">Manual Input</el-radio-button>
+                    </el-radio-group>
+
+                    <div v-if="sourceSelectionMode === 'saved'">
+                        <el-form-item label="Connection">
+                            <el-select v-model="selectedSourceId" placeholder="Select MySQL Connection" style="width: 100%">
+                                <el-option v-for="c in mysqlConnections" :key="c.id" :label="c.name + ' (' + c.host + ')'" :value="c.id"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="Database">
+                            <el-select v-model="selectedDatabase" placeholder="Select Database" style="width: 100%" @visible-change="v => v && loadMysqlDatabasesSaved()">
+                                <el-option v-for="d in mysqlDbList" :key="d" :label="d" :value="d"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="Tables (optional)">
+                            <el-select v-model="selectedTables" multiple collapse-tags placeholder="Leave empty for full sync" style="width: 100%" :disabled="!selectedDatabase" @visible-change="v => v && loadMysqlTables()">
+                                <el-option v-for="t in mysqlTableList" :key="t" :label="t" :value="t"></el-option>
+                            </el-select>
+                        </el-form-item>
+                    </div>
+                    <div v-else>
+                        <el-form-item label="Host"><el-input v-model="form.mysql.host"></el-input></el-form-item>
+                        <el-form-item label="Port"><el-input-number v-model="form.mysql.port"></el-input-number></el-form-item>
+                        <el-form-item label="User"><el-input v-model="form.mysql.user"></el-input></el-form-item>
+                        <el-form-item label="Password"><el-input v-model="form.mysql.password" type="password" show-password></el-input></el-form-item>
+                        <el-form-item label="Database">
+                            <el-select v-model="selectedDatabase" placeholder="Select Database" style="width: 100%" @visible-change="v => v && loadMysqlDatabasesManual()">
+                                <el-option v-for="d in mysqlDbList" :key="d" :label="d" :value="d"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="Tables (optional)">
+                            <el-select v-model="selectedTables" multiple collapse-tags placeholder="Leave empty for full sync" style="width: 100%" :disabled="!selectedDatabase" @visible-change="v => v && loadMysqlTables(true)">
+                                <el-option v-for="t in mysqlTableList" :key="t" :label="t" :value="t"></el-option>
+                            </el-select>
+                        </el-form-item>
+                    </div>
+                </div>
+
+                <!-- Step 3: Mongo Target -->
+                <div v-show="activeStep === 2">
+                    <div class="section-title">Select MongoDB Target</div>
+                    <el-radio-group v-model="targetSelectionMode" style="margin-bottom: 20px;">
+                        <el-radio-button label="saved">Saved Connection</el-radio-button>
+                        <el-radio-button label="manual">Manual Input</el-radio-button>
+                    </el-radio-group>
+
+                    <div v-if="targetSelectionMode === 'saved'">
+                         <el-form-item label="Connection">
+                            <el-select v-model="selectedTargetId" placeholder="Select Mongo Connection" style="width: 100%">
+                                <el-option v-for="c in mongoConnections" :key="c.id" :label="c.name + ' (' + c.host + ')'" :value="c.id"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="Target DB">
+                             <el-input v-model="form.mongo.database" placeholder="Override DB name (Optional)"></el-input>
+                        </el-form-item>
+                    </div>
+                    <div v-else>
+                        <el-form-item label="Host"><el-input v-model="form.mongo.host"></el-input></el-form-item>
+                        <el-form-item label="Port"><el-input-number v-model="form.mongo.port"></el-input-number></el-form-item>
+                        <el-form-item label="User"><el-input v-model="form.mongo.user"></el-input></el-form-item>
+                        <el-form-item label="Password"><el-input v-model="form.mongo.password" type="password" show-password></el-input></el-form-item>
+                        <el-form-item label="Database"><el-input v-model="form.mongo.database"></el-input></el-form-item>
+                        <el-form-item label="Auth Source"><el-input v-model="form.mongo.auth_source"></el-input></el-form-item>
+                    </div>
+                </div>
+
+                <!-- Step 4: Mode & Scope -->
+                <div v-show="activeStep === 3">
+                    <div class="section-title">Sync Strategy</div>
+                    
+                    <el-form-item label="Sync Scope">
+                        <el-radio-group v-model="syncScope">
+                            <el-radio-button label="full">Full Database</el-radio-button>
+                            <el-radio-button label="partial">Selected Tables</el-radio-button>
+                        </el-radio-group>
+                    </el-form-item>
+
+                    <div v-if="syncScope === 'partial'">
+                        <div class="section-title">Table Mappings</div>
+                        <div v-for="(map, index) in form.mappings" :key="index" class="mapping-row">
+                            <el-input v-model="map.source" placeholder="MySQL Table" style="flex: 1"></el-input>
+                            <el-icon><Right /></el-icon>
+                            <el-input v-model="map.target" placeholder="Mongo Collection" style="flex: 1"></el-input>
+                            <el-button type="danger" circle size="small" @click="form.mappings.splice(index, 1)">
+                                <el-icon><Delete /></el-icon>
+                            </el-button>
+                        </div>
+                        <el-button type="primary" link @click="form.mappings.push({source:'', target:''})">+ Add Mapping</el-button>
+                    </div>
+                    <div v-else>
+                         <el-alert title="All tables in the source database will be synced. New tables will be automatically discovered." type="info" show-icon :closable="false"></el-alert>
+                    </div>
+
+                    <div class="section-title">Sync Mode</div>
+                    <el-form-item label="Mode">
+                        <el-radio-group v-model="syncMode" class="mode-group">
+                            <el-radio label="history"><strong>History Retention (Append)</strong></el-radio>
+                            <div class="mode-desc">Updates create new versions; Deletes append tombstone records.</div>
+                            <el-radio label="mirror"><strong>Mirror Mode (In-Place)</strong></el-radio>
+                            <div class="mode-desc">Target stays identical to Source. Updates overwrite; Deletes are soft-marked (or hard deleted if configured).</div>
+                        </el-radio-group>
+                    </el-form-item>
+
+                    <el-form-item label="Primary Key">
+                        <el-input v-model="form.pk_field" placeholder="id"></el-input>
+                    </el-form-item>
+                </div>
+            </el-form>
+            <template #footer>
+                <el-button @click="createVisible = false">Cancel</el-button>
+                <el-button v-if="activeStep > 0" @click="activeStep--">Back</el-button>
+                <el-button v-if="activeStep < 3" type="primary" @click="activeStep++">Next</el-button>
+                <el-button v-if="activeStep === 3" type="success" @click="createTask" :loading="creating">Start Task</el-button>
+            </template>
+        </el-dialog>
+
+        <!-- CREATE CONNECTION DIALOG -->
+        <el-dialog v-model="connVisible" :title="editingConnId ? 'Edit Data Source' : 'Add Data Source'" width="600px">
+            <el-form :model="connForm" label-width="100px">
+                <el-form-item label="Type">
+                    <el-select v-model="connForm.type" placeholder="Select Type" style="width: 100%">
+                        <el-option label="MySQL" value="mysql"></el-option>
+                        <el-option label="MongoDB" value="mongo"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="Name" required>
+                    <el-input v-model="connForm.name" placeholder="e.g. Prod DB"></el-input>
+                </el-form-item>
+                <el-form-item label="ID" required>
+                    <el-input v-model="connForm.id" placeholder="Unique ID (e.g. mysql_prod)" :disabled="!!editingConnId"></el-input>
+                </el-form-item>
+                <el-divider></el-divider>
+                <template v-if="connForm.type === 'mysql'">
+                    <el-form-item label="Host" required><el-input v-model="connForm.host"></el-input></el-form-item>
+                    <el-form-item label="Port" required><el-input-number v-model="connForm.port"></el-input-number></el-form-item>
+                    <el-form-item label="User" required><el-input v-model="connForm.user"></el-input></el-form-item>
+                    <el-form-item label="Password" required><el-input v-model="connForm.password" type="password" show-password></el-input></el-form-item>
+                    <el-form-item label="Database"><el-input v-model="connForm.database"></el-input></el-form-item>
+                </template>
+                <template v-else>
+                    <el-form-item label="Hosts">
+                        <el-input v-model="connForm.mongo_hosts" placeholder="mongo1:27017,mongo2:27017,mongo3:27017"></el-input>
+                        <div style="font-size: 12px; color: #999;">填写副本集多个节点（逗号分隔）。如不填则使用单节点 Host/Port。</div>
+                    </el-form-item>
+                    <el-form-item label="Replica Set">
+                        <el-input v-model="connForm.replica_set" placeholder="rs0"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Host"><el-input v-model="connForm.host" placeholder="单节点 Host"></el-input></el-form-item>
+                    <el-form-item label="Port"><el-input-number v-model="connForm.port"></el-input-number></el-form-item>
+                    <el-form-item label="User" required><el-input v-model="connForm.user"></el-input></el-form-item>
+                    <el-form-item label="Password" required><el-input v-model="connForm.password" type="password" show-password></el-input></el-form-item>
+                    <el-form-item label="Database"><el-input v-model="connForm.database"></el-input></el-form-item>
+                    <el-form-item label="Auth Source"><el-input v-model="connForm.auth_source"></el-input></el-form-item>
+                </template>
+                <el-alert v-if="testMsg" :title="testMsg" :type="testPassed ? 'success' : 'error'" show-icon :closable="false"></el-alert>
+            </el-form>
+            <template #footer>
+                <el-button @click="connVisible = false">Cancel</el-button>
+                <el-button @click="testConnection" :loading="testing">测试连接</el-button>
+                <el-button type="primary" @click="saveConnection" :disabled="!testPassed">{{ editingConnId ? 'Update' : '保存' }}</el-button>
+            </template>
+        </el-dialog>
+        
+        <el-dialog v-model="logsVisible" title="Task Logs" width="800px" destroy-on-close append-to-body center>
+            <div style="background-color: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 4px; height: 500px; overflow-y: auto; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; line-height: 1.5;">
+                <div v-if="logsLines.length === 0" style="color: #666; text-align: center; margin-top: 200px;">No logs available</div>
+                <div v-for="(line, idx) in logsLines" :key="idx">{{ line.trim() }}</div>
+            </div>
+            <template #footer>
+                <el-button @click="logsVisible = false">Close</el-button>
+            </template>
+        </el-dialog>
+
+        <el-dialog v-model="metricsVisible" title="Task Metrics" width="800px" destroy-on-close append-to-body center>
+            <div style="display:flex; gap:12px; margin-bottom:12px;">
+                <el-tag type="primary">Full Insert: {{ displayCounts.full }}</el-tag>
+                <el-tag type="success">Inc Insert: {{ displayCounts.inc }}</el-tag>
+                <el-tag type="warning">Update: {{ displayCounts.update }}</el-tag>
+                <el-tag type="danger">Delete: {{ displayCounts.delete }}</el-tag>
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+                <el-radio-group v-model="metricsChartType" size="small">
+                    <el-radio-button label="bar">柱状图</el-radio-button>
+                    <el-radio-button label="donut">环形图</el-radio-button>
+                </el-radio-group>
+            </div>
+            <div style="background:#fff; padding:10px; border-radius:6px;">
+                <canvas id="metricsChart" height="240"></canvas>
+            </div>
+            <div style="background:#fff; padding:10px; border-radius:6px; margin-top:10px;">
+                <canvas id="metricsTrend" height="120"></canvas>
+            </div>
+            <template #footer>
+                <el-button @click="metricsVisible = false">Close</el-button>
+            </template>
+        </el-dialog>
+        
+        <el-dialog v-model="tablesVisible" title="Tables" width="600px" destroy-on-close append-to-body center>
+            <el-table :data="tablesPageData" size="small" style="width:100%" border>
+                <el-table-column prop="name" label="Table"></el-table-column>
+            </el-table>
+            <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+                <el-pagination
+                    :current-page="tablesPage"
+                    :page-size="tablesPageSize"
+                    :total="tablesTotal"
+                    layout="prev, pager, next"
+                    @current-change="handleTablesPageChange">
+                </el-pagination>
+            </div>
+            <template #footer>
+                <el-button @click="tablesVisible = false">Close</el-button>
+            </template>
+        </el-dialog>
+
+    
+
+    <script>
+        const { createApp, ref, reactive, onMounted, computed, watch, nextTick } = Vue;
+        const { ElMessage, ElMessageBox } = ElementPlus;
+        const { Odometer, List, Connection, Plus, Delete, Right, Edit } = ElementPlusIconsVue;
+
+        const app = createApp({
+            components: { Odometer, List, Connection, Plus, Delete, Right, Edit },
+            setup() {
+                const currentView = ref('dashboard');
+                const tasks = ref([]);
+                const connections = ref([]);
+                
+                // --- Task Creation State ---
+                const createVisible = ref(false);
+                const activeStep = ref(0);
+                const creating = ref(false);
+                const sourceSelectionMode = ref('saved');
+                const targetSelectionMode = ref('saved');
+                const selectedSourceId = ref('');
+                const selectedTargetId = ref('');
+                const syncScope = ref('partial');
+                const syncMode = ref('history');
+                const logsVisible = ref(false);
+                const logsTaskId = ref('');
+                const logsLines = ref([]);
+                let logsTimer = null;
+                const metricsVisible = ref(false);
+                const metricsTaskId = ref('');
+                const metricsCounts = reactive({ full: 0, inc: 0, update: 0, delete: 0 });
+                const displayCounts = reactive({ full: 0, inc: 0, update: 0, delete: 0 });
+                let metricsTimer = null;
+                let metricsCanvas = null;
+                let metricsCtx = null;
+                let trendCanvas = null;
+                let trendCtx = null;
+                let metricsEchart = null;
+                const metricsChartType = ref('bar');
+                let metricsLast = [0,0,0,0];
+                let glowAngle = 0;
+                const trendData = reactive({
+                    full: Array(40).fill(0),
+                    inc: Array(40).fill(0),
+                    update: Array(40).fill(0),
+                    delete: Array(40).fill(0),
+                });
+                const tablesVisible = ref(false);
+                const tablesTaskId = ref('');
+                const tablesAllList = ref([]);
+                const tablesPage = ref(1);
+                const tablesPageSize = ref(10);
+                const tablesTotal = ref(0);
+                const tablesPageData = ref([]);
+                const mysqlDbList = ref([]);
+                const mysqlTableList = ref([]);
+                const selectedDatabase = ref('');
+                const selectedTables = ref([]);
+
+                const form = reactive({
+                    task_id: '',
+                    mysql: { host: 'localhost', port: 3306, user: 'root', password: '', database: '' },
+                    mongo: { host: 'localhost', port: 27017, user: 'root', password: '', database: '', auth_source: 'admin' },
+                    mappings: [{source: '', target: ''}],
+                    pk_field: 'id'
+                });
+
+                // --- Connection Creation / Edit State ---
+                const connVisible = ref(false);
+                const connForm = reactive({
+                    id: '', name: '', type: 'mysql',
+                    host: 'localhost', port: 3306, user: 'root', password: '', database: '', auth_source: 'admin',
+                    mongo_hosts: '', replica_set: ''
+                });
+                const testing = ref(false);
+                const testPassed = ref(false);
+                const testMsg = ref('');
+                const editingConnId = ref('');
+
+                // --- Computed ---
+                const mysqlConnections = computed(() => connections.value.filter(c => c.type === 'mysql'));
+                const mongoConnections = computed(() => connections.value.filter(c => c.type === 'mongo'));
+
+                // --- Methods ---
+                const handleMenuSelect = (index) => {
+                    currentView.value = index;
+                    if (index === 'connections') fetchConnections();
+                    if (index === 'dashboard' || index === 'tasks') fetchTasks();
+                };
+
+                const fetchTasks = async () => {
+                    const res = await fetch('/tasks/status');
+                    const data = await res.json();
+                    tasks.value = data.tasks;
+                };
+
+                const fetchConnections = async () => {
+                    const res = await fetch('/connections');
+                    const data = await res.json();
+                    connections.value = data.connections;
+                };
+
+                // Polling
+                setInterval(() => {
+                    if (currentView.value === 'dashboard' || currentView.value === 'tasks') {
+                        fetchTasks();
+                    }
+                }, 3000);
+
+                const showCreateDialog = async () => {
+                    await fetchConnections();
+                    form.task_id = 'task_' + Date.now();
+                    activeStep.value = 0;
+                    createVisible.value = true;
+                };
+
+                const showConnDialog = () => {
+                    connForm.id = 'conn_' + Date.now();
+                    // 新增模式清空下方字段，不填历史
+                    connForm.name = '';
+                    connForm.type = 'mysql';
+                    connForm.host = '';
+                    connForm.port = null;
+                    connForm.user = '';
+                    connForm.password = '';
+                    connForm.database = '';
+                    connForm.auth_source = '';
+                    connForm.mongo_hosts = '';
+                    connForm.replica_set = '';
+                    connVisible.value = true;
+                    testPassed.value = false;
+                    testMsg.value = '';
+                    editingConnId.value = '';
+                };
+
+                const _buildConnectionPayload = () => {
+                    const payload = { ...connForm };
+                    if (payload.type === 'mongo') {
+                        // If mongo_hosts provided or host contains commas, prefer replica set mode
+                        const hostsStr = (payload.mongo_hosts || '').trim() || (payload.host || '');
+                        if (hostsStr.includes(',')) {
+                            payload.hosts = hostsStr.split(',').map(s => s.trim()).filter(Boolean);
+                            // keep replica_set as provided
+                        } else {
+                            // single host mode, ensure hosts not set
+                            payload.hosts = undefined;
+                            payload.replica_set = undefined;
+                        }
+                    }
+                    return payload;
+                };
+
+                const _buildMysqlConnForQuery = async (fromManual = false) => {
+                    if (sourceSelectionMode.value === 'saved' && !fromManual) {
+                        if (!selectedSourceId.value) throw new Error('请选择 MySQL 连接');
+                        const res = await fetch('/connections/' + selectedSourceId.value);
+                        if (!res.ok) throw new Error('加载连接失败');
+                        const cfg = await res.json();
+                        return { id: cfg.id || 'tmp', name: cfg.name || '', type: 'mysql', host: cfg.host, port: cfg.port, user: cfg.user, password: cfg.password, database: selectedDatabase.value || '' };
+                    } else {
+                        return { id: 'manual', name: 'manual', type: 'mysql', host: form.mysql.host, port: form.mysql.port, user: form.mysql.user, password: form.mysql.password, database: selectedDatabase.value || '' };
+                    }
+                };
+                const loadMysqlDatabasesSaved = async () => {
+                    try {
+                        if (!selectedSourceId.value) return;
+                        const conn = await _buildMysqlConnForQuery(false);
+                        const res = await fetch('/mysql/databases', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(conn) });
+                        const data = await res.json();
+                        mysqlDbList.value = data.databases || [];
+                    } catch(e) { ElMessage.error(e.message); }
+                };
+                const loadMysqlDatabasesManual = async () => {
+                    try {
+                        const conn = await _buildMysqlConnForQuery(true);
+                        const res = await fetch('/mysql/databases', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(conn) });
+                        const data = await res.json();
+                        mysqlDbList.value = data.databases || [];
+                    } catch(e) { ElMessage.error(e.message); }
+                };
+                const loadMysqlTables = async (fromManual = false) => {
+                    try {
+                        if (!selectedDatabase.value) return;
+                        const conn = await _buildMysqlConnForQuery(!!fromManual);
+                        conn.database = selectedDatabase.value;
+                        const res = await fetch('/mysql/tables', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(conn) });
+                        const data = await res.json();
+                        mysqlTableList.value = data.tables || [];
+                    } catch(e) { ElMessage.error(e.message); }
+                };
+
+                const editConnection = async (id) => {
+                    try {
+                        const res = await fetch('/connections/' + id);
+                        if (!res.ok) throw new Error('加载连接失败');
+                        const cfg = await res.json();
+                        connForm.id = id;
+                        connForm.name = cfg.name || id;
+                        connForm.type = cfg.type || 'mysql';
+                        connForm.user = cfg.user || '';
+                        connForm.password = cfg.password || '';
+                        connForm.database = cfg.database || '';
+                        connForm.auth_source = cfg.auth_source || 'admin';
+                        if (connForm.type === 'mongo') {
+                            if (cfg.hosts && Array.isArray(cfg.hosts) && cfg.hosts.length > 0) {
+                                connForm.mongo_hosts = cfg.hosts.join(',');
+                                connForm.replica_set = cfg.replica_set || '';
+                                connForm.host = '';
+                                connForm.port = 27017;
+                            } else {
+                                connForm.mongo_hosts = '';
+                                connForm.replica_set = '';
+                                connForm.host = cfg.host || 'localhost';
+                                connForm.port = cfg.port || 27017;
+                            }
+                        } else {
+                            connForm.host = cfg.host || 'localhost';
+                            connForm.port = cfg.port || 3306;
+                            connForm.mongo_hosts = '';
+                            connForm.replica_set = '';
+                        }
+                        // Allow updating without re-test until fields are changed
+                        testPassed.value = true;
+                        testMsg.value = '已加载历史配置（如有修改请重新测试）';
+                        editingConnId.value = id;
+                        connVisible.value = true;
+                    } catch(e) {
+                        ElMessage.error(e.message);
+                    }
+                };
+
+                const testConnection = async () => {
+                    testing.value = true;
+                    testPassed.value = false;
+                    testMsg.value = '';
+                    try {
+                        const res = await fetch('/connections/test', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(_buildConnectionPayload())
+                        });
+                        const data = await res.json();
+                        if (res.ok && data.ok) {
+                            testPassed.value = true;
+                            testMsg.value = `连接成功，延迟 ${data.latency_ms} ms`;
+                            ElMessage.success('测试连接成功');
+                        } else {
+                            testPassed.value = false;
+                            testMsg.value = (data.detail || '测试失败');
+                            ElMessage.error('测试连接失败');
+                        }
+                    } catch(e) {
+                        testPassed.value = false;
+                        testMsg.value = e.message;
+                        ElMessage.error(e.message);
+                    } finally {
+                        testing.value = false;
+                    }
+                };
+
+                const saveConnection = async () => {
+                    if (!testPassed.value) {
+                        ElMessage.error('请先测试连接，成功后再保存');
+                        return;
+                    }
+                    try {
+                        const res = await fetch('/connections', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(_buildConnectionPayload())
+                        });
+                        if (res.ok) {
+                            ElMessage.success(editingConnId.value ? 'Connection updated' : 'Connection saved');
+                            connVisible.value = false;
+                            editingConnId.value = '';
+                            fetchConnections();
+                        } else {
+                            ElMessage.error('Failed to save connection');
+                        }
+                    } catch(e) { ElMessage.error(e.message); }
+                };
+
+                const deleteConnection = async (id) => {
+                    await fetch('/connections/' + id, { method: 'DELETE' });
+                    fetchConnections();
+                    ElMessage.success('Deleted');
+                };
+
+                const confirmStop = (id) => {
+                    ElMessageBox.confirm(
+                        'Stop this task? Configuration will be kept.',
+                        'Confirm Stop',
+                        { confirmButtonText: 'Stop', cancelButtonText: 'Cancel', type: 'warning', center: true }
+                    ).then(async () => {
+                        await fetch('/tasks/stop_soft/' + id, { method: 'POST' });
+                        ElMessage.success('Stop command sent');
+                        fetchTasks();
+                    }).catch(() => {});
+                };
+
+                const confirmReset = (id) => {
+                    ElMessageBox.confirm(
+                        'Reset task state? This will trigger a full resync next time.',
+                        'Confirm Reset',
+                        { confirmButtonText: 'Reset', cancelButtonText: 'Cancel', type: 'info', center: true }
+                    ).then(async () => {
+                        await fetch('/tasks/reset/' + id, { method: 'POST' });
+                        ElMessage.success('Reset done');
+                        fetchTasks();
+                    }).catch(() => {});
+                };
+
+                const confirmDelete = (id) => {
+                    ElMessageBox.confirm(
+                        'Permanently delete task config, state, and logs?',
+                        'Confirm Delete',
+                        { confirmButtonText: 'Delete', cancelButtonText: 'Cancel', type: 'danger', center: true }
+                    ).then(async () => {
+                        await fetch('/tasks/delete/' + id, { method: 'POST' });
+                        ElMessage.success('Deleted');
+                        fetchTasks();
+                    }).catch(() => {});
+                };
+                
+                const confirmStart = (id) => {
+                    ElMessageBox.confirm(
+                        'Start this task from saved position?',
+                        'Confirm Start',
+                        { confirmButtonText: 'Start', cancelButtonText: 'Cancel', type: 'success', center: true }
+                    ).then(async () => {
+                        try {
+                            const res = await fetch('/tasks/start_existing/' + id, { method: 'POST' });
+                            if (res.ok) {
+                                ElMessage.success('Start command sent');
+                            } else {
+                                let err = {};
+                                try { err = await res.json(); } catch(_) {}
+                                ElMessage.error('Failed to start: ' + (err.detail || res.statusText));
+                            }
+                        } catch(e) {
+                            ElMessage.error('Failed to start: ' + (e?.message || e));
+                        } finally {
+                            fetchTasks();
+                        }
+                    }).catch(() => {});
+                };
+
+                const confirmResetAndStart = (id) => {
+                    ElMessageBox.confirm(
+                        'Reset task state and restart from the beginning?',
+                        'Reset & Start',
+                        { confirmButtonText: 'Reset & Start', cancelButtonText: 'Cancel', type: 'warning', center: true }
+                    ).then(async () => {
+                        try {
+                            const res = await fetch('/tasks/reset_and_start/' + id, { method: 'POST' });
+                            if (res.ok) {
+                                ElMessage.success('Reset and start sent');
+                            } else {
+                                let err = {};
+                                try { err = await res.json(); } catch(_) {}
+                                ElMessage.error('Failed: ' + (err.detail || res.statusText));
+                            }
+                        } catch(e) {
+                            ElMessage.error('Failed: ' + (e?.message || e));
+                        } finally {
+                            fetchTasks();
+                        }
+                    }).catch(() => {});
+                };
+                
+                const truncateTables = (list) => {
+                    if (!list || !Array.isArray(list) || list.length === 0) return '-';
+                    const maxLen = 60;
+                    let res = [];
+                    let cur = 0;
+                    for (let i = 0; i < list.length; i++) {
+                        const name = list[i];
+                        const part = (res.length > 0 ? ', ' : '') + name;
+                        if (cur + part.length > maxLen) {
+                            res.push('.*');
+                            break;
+                        }
+                        res.push(name);
+                        cur += part.length;
+                    }
+                    return res.join(', ');
+                };
+                const openTables = (id) => {
+                    const t = tasks.value.find(x => x.task_id === id);
+                    if (!t) return;
+                    tablesTaskId.value = id;
+                    const arr = (t.config && Array.isArray(t.config.tables)) ? t.config.tables.slice() : [];
+                    tablesAllList.value = arr;
+                    tablesTotal.value = arr.length;
+                    tablesPage.value = 1;
+                    const ps = Number(tablesPageSize.value) || 10;
+                    tablesPageData.value = arr.slice(0, ps).map(n => ({ name: n }));
+                    tablesVisible.value = true;
+                };
+                const handleTablesPageChange = (p) => {
+                    tablesPage.value = p;
+                    const ps = Number(tablesPageSize.value) || 10;
+                    const start = (p - 1) * ps;
+                    const end = start + ps;
+                    const arr = tablesAllList.value || [];
+                    tablesPageData.value = arr.slice(start, end).map(n => ({ name: n }));
+                };
+                
+                const viewLogs = async (id) => {
+                    try {
+                        logsTaskId.value = id;
+                        logsVisible.value = true;
+                        await nextTick();
+                        const fetchLogs = async () => {
+                            const res = await fetch(`/tasks/logs/${id}?lines=500&_=${Date.now()}`);
+                            const data = await res.json();
+                            logsLines.value = data.lines || [];
+                        };
+                        await fetchLogs();
+                        if (logsTimer) clearInterval(logsTimer);
+                        logsTimer = setInterval(fetchLogs, 2000);
+                        ElMessage.success('Logs loaded');
+                    } catch (e) {
+                        ElMessage.error('Failed to load logs: ' + (e?.message || e));
+                    }
+                };
+                // Close logs dialog clears timer
+                watch(() => logsVisible.value, (v) => {
+                    if (!v && logsTimer) {
+                        clearInterval(logsTimer);
+                        logsTimer = null;
+                    }
+                });
+
+                const _fetchMetricsOnce = async (id) => {
+                    const headers = {};
+                    if (lastMetricsETag) headers['If-None-Match'] = lastMetricsETag;
+                    const res = await fetch(`/tasks/status/${id}?_=${Date.now()}`, { headers });
+                    if (res.status === 304) return;
+                    if (!res.ok) {
+                        _hydrateMetricsFromList(id);
+                        return;
+                    }
+                    const newTag = res.headers.get('ETag');
+                    if (newTag) lastMetricsETag = newTag;
+                    const data = await res.json();
+                    const m = (data.metrics || {});
+                    const prev = [metricsCounts.full, metricsCounts.inc, metricsCounts.update, metricsCounts.delete];
+                    metricsCounts.full = m.full_insert_count || 0;
+                    metricsCounts.inc = m.inc_insert_count || 0;
+                    metricsCounts.update = m.update_count || 0;
+                    metricsCounts.delete = m.delete_count || 0;
+                    _animateCounts(prev, [metricsCounts.full, metricsCounts.inc, metricsCounts.update, metricsCounts.delete]);
+                    
+                    const deltaFull = Math.max(0, metricsCounts.full - prev[0]);
+                    const deltaInc = Math.max(0, metricsCounts.inc - prev[1]);
+                    const deltaUpd = Math.max(0, metricsCounts.update - prev[2]);
+                    const deltaDel = Math.max(0, metricsCounts.delete - prev[3]);
+                    
+                    trendData.full.push(deltaFull); trendData.full.shift();
+                    trendData.inc.push(deltaInc); trendData.inc.shift();
+                    trendData.update.push(deltaUpd); trendData.update.shift();
+                    trendData.delete.push(deltaDel); trendData.delete.shift();
+                    
+                    _drawTrend();
+                    _drawMetricsChart();
+                };
+
+                const _animateCounts = (fromArr, toArr) => {
+                    const start = performance.now();
+                    const dur = 400;
+                    function ease(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
+                    function step(now){
+                        const p = Math.min(1, (now-start)/dur);
+                        const k = ease(p);
+                        displayCounts.full = Math.round(fromArr[0] + (toArr[0]-fromArr[0])*k);
+                        displayCounts.inc = Math.round(fromArr[1] + (toArr[1]-fromArr[1])*k);
+                        displayCounts.update = Math.round(fromArr[2] + (toArr[2]-fromArr[2])*k);
+                        displayCounts.delete = Math.round(fromArr[3] + (toArr[3]-fromArr[3])*k);
+                        if (p<1) requestAnimationFrame(step);
+                    }
+                    requestAnimationFrame(step);
+                };
+
+                const _drawMetricsChart = () => {
+                    if (!metricsCtx || !metricsCanvas) return;
+                    const dpr = window.devicePixelRatio || 1;
+                    const cssW = metricsCanvas.parentElement ? metricsCanvas.parentElement.clientWidth - 20 : 760;
+                    const cssH = 240;
+                    metricsCanvas.width = Math.max(320, cssW) * dpr;
+                    metricsCanvas.height = cssH * dpr;
+                    metricsCanvas.style.width = Math.max(320, cssW) + 'px';
+                    metricsCanvas.style.height = cssH + 'px';
+                    const ctx = metricsCtx;
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                    ctx.clearRect(0, 0, cssW, cssH);
+                    const values = [metricsCounts.full, metricsCounts.inc, metricsCounts.update, metricsCounts.delete];
+                    const colors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C'];
+                    const labels = ['Full', 'Inc', 'Update', 'Delete'];
+                    const duration = 400;
+                    const start = performance.now();
+                    const from = metricsLast.slice();
+                    const to = values.slice();
+                    function ease(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
+                    function frame(now){
+                        const p = Math.min(1,(now-start)/duration);
+                        const k = ease(p);
+                        const cur = from.map((v,i)=>v+(to[i]-v)*k);
+                        if (metricsChartType.value === 'bar'){
+                            const padding = 36;
+                            const chartW = cssW - padding * 2;
+                            const chartH = cssH - padding * 2;
+                            const maxVal = Math.max(10, ...to); // 最小刻度10，避免全0时无法显示
+                            const gap = 28;
+                            const barW = Math.max(22, (chartW - gap * (cur.length - 1)) / cur.length);
+                            ctx.clearRect(0,0,cssW,cssH);
+                            ctx.strokeStyle = '#e5e5e5';
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(padding, cssH - padding);
+                            ctx.lineTo(cssW - padding, cssH - padding);
+                            ctx.stroke();
+                            labels.forEach((lbl,i)=>{
+                                const x = padding + i * (barW + gap);
+                                const h = Math.round((cur[i] / maxVal) * (chartH - 24));
+                                const y = cssH - padding - h;
+                                const grad = ctx.createLinearGradient(x, y, x, cssH - padding);
+                                grad.addColorStop(0, colors[i]);
+                                grad.addColorStop(1, '#ffffff');
+                                ctx.fillStyle = grad;
+                                ctx.shadowColor = 'rgba(0,0,0,0.15)';
+                                ctx.shadowBlur = 8;
+                                ctx.shadowOffsetY = 4;
+                                // 即使高度为0也画一个像素的底线，或者直接画
+                                if (h > 0) ctx.fillRect(x, y, barW, h);
+                                ctx.shadowColor = 'transparent';
+                                ctx.fillStyle = '#333';
+                                ctx.font = '12px system-ui';
+                                ctx.textAlign = 'center';
+                                ctx.fillText(lbl, x + barW/2, cssH - padding + 16);
+                                ctx.fillStyle = colors[i];
+                                ctx.font = 'bold 12px system-ui';
+                                ctx.fillText(String(Math.round(cur[i])), x + barW/2, y - 8);
+                            });
+                        } else {
+                            const cx = cssW/2, cy = cssH/2, radius = Math.min(cssW, cssH)/3;
+                            const total = Math.max(1, to.reduce((a,b)=>a+b,0));
+                            const startAng = -Math.PI/2;
+                            ctx.clearRect(0,0,cssW,cssH);
+                            let acc = 0;
+                            // 修正：如果所有数据都是0，画一个灰色的空圈
+                            if (to.every(v => v === 0)) {
+                                ctx.beginPath();
+                                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                                ctx.strokeStyle = '#f0f0f0';
+                                ctx.lineWidth = 20;
+                                ctx.stroke();
+                                ctx.fillStyle = '#999';
+                                ctx.font = '14px system-ui';
+                                ctx.textAlign = 'center';
+                                ctx.fillText('No Data', cx, cy);
+                                if (p<1) requestAnimationFrame(frame); else metricsLast = to.slice();
+                                return;
+                            }
+                            
+                            cur.forEach((v,i)=>{
+                                if (v <= 0.01) return; // 忽略过小的值，避免标签重叠
+                                const ang = (v/total) * Math.PI*2;
+                                const a0 = startAng + (acc/total)*Math.PI*2;
+                                const a1 = a0 + ang;
+                                const grad = ctx.createRadialGradient(cx, cy, radius*0.6, cx, cy, radius);
+                                grad.addColorStop(0, colors[i]);
+                                grad.addColorStop(1, '#ffffff');
+                                ctx.beginPath();
+                                ctx.arc(cx, cy, radius, a0, a1);
+                                ctx.arc(cx, cy, radius*0.6, a1, a0, true);
+                                ctx.closePath();
+                                ctx.fillStyle = grad;
+                                ctx.shadowColor = 'rgba(64,158,255,0.25)';
+                                ctx.shadowBlur = 18;
+                                ctx.fill();
+                                ctx.shadowColor = 'transparent';
+                                
+                                // 标签防重叠处理：简单的左右对齐
+                                const mid = a0 + (a1-a0)/2;
+                                // 基础偏移距离
+                                const labelR = radius + 20;
+                                let tx = cx + Math.cos(mid) * labelR;
+                                let ty = cy + Math.sin(mid) * labelR;
+                                
+                                ctx.fillStyle = colors[i];
+                                ctx.font = '12px system-ui';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillText(labels[i], tx, ty - 8);
+                                ctx.font = 'bold 12px system-ui';
+                                ctx.fillText(String(Math.round(cur[i])), tx, ty + 8);
+                                acc += v;
+                            });
+                            // 环形炫光：绕圈高亮
+                            glowAngle = (glowAngle + 0.08) % (Math.PI*2);
+                            const glowStart = glowAngle;
+                            const glowEnd = glowStart + Math.PI/6;
+                            const glowGrad = ctx.createRadialGradient(cx, cy, radius*0.9, cx, cy, radius*1.05);
+                            glowGrad.addColorStop(0, 'rgba(255,255,255,0.0)');
+                            glowGrad.addColorStop(1, 'rgba(64,158,255,0.35)');
+                            ctx.beginPath();
+                            ctx.arc(cx, cy, radius*1.02, glowStart, glowEnd);
+                            ctx.arc(cx, cy, radius*0.85, glowEnd, glowStart, true);
+                            ctx.closePath();
+                            ctx.fillStyle = glowGrad;
+                            ctx.shadowColor = 'rgba(64,158,255,0.5)';
+                            ctx.shadowBlur = 20;
+                            ctx.fill();
+                            ctx.shadowColor = 'transparent';
+                            ctx.fillStyle = '#333';
+                            ctx.font = 'bold 14px system-ui';
+                            ctx.textAlign = 'center';
+                            ctx.fillText('Total', cx, cy-6);
+                            ctx.fillStyle = '#409EFF';
+                            ctx.font = 'bold 16px system-ui';
+                            ctx.fillText(String(Math.round(cur.reduce((a,b)=>a+b,0))), cx, cy+16);
+                        }
+                        if (p<1) requestAnimationFrame(frame); else metricsLast = to.slice();
+                    }
+                    requestAnimationFrame(frame);
+                };
+
+                const _drawTrend = () => {
+                    if (!trendCtx || !trendCanvas) return;
+                    const dpr = window.devicePixelRatio || 1;
+                    const cssW = trendCanvas.parentElement ? trendCanvas.parentElement.clientWidth - 20 : 760;
+                    const cssH = 120;
+                    trendCanvas.width = Math.max(320, cssW) * dpr;
+                    trendCanvas.height = cssH * dpr;
+                    trendCanvas.style.width = Math.max(320, cssW) + 'px';
+                    trendCanvas.style.height = cssH + 'px';
+                    const ctx = trendCtx;
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                    ctx.clearRect(0,0,cssW,cssH);
+                    const padding = 6;
+                    const w = cssW - padding*2;
+                    const h = cssH - padding*2;
+                    const series = [
+                        { data: trendData.full, color: '#409EFF' },
+                        { data: trendData.inc, color: '#67C23A' },
+                        { data: trendData.update, color: '#E6A23C' },
+                        { data: trendData.delete, color: '#F56C6C' },
+                    ];
+                    const maxY = Math.max(1, ...series.map(s => Math.max(...s.data)));
+                    series.forEach((s, idx) => {
+                        const grad = ctx.createLinearGradient(padding, padding, padding, cssH-padding);
+                        grad.addColorStop(0, s.color);
+                        grad.addColorStop(1, 'rgba(255,255,255,0.6)');
+                        ctx.strokeStyle = s.color;
+                        ctx.lineWidth = 2;
+                        ctx.shadowColor = s.color;
+                        ctx.shadowBlur = 8;
+                        ctx.beginPath();
+                        s.data.forEach((v,i) => {
+                            const x = padding + (i/(s.data.length-1))*w;
+                            const y = cssH - padding - (v/maxY)*h;
+                            if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+                        });
+                        ctx.stroke();
+                        ctx.shadowColor = 'transparent';
+                    });
+                };
+
+                let lastMetricsETag = '';
+                const openStats = async (id) => {
+                    metricsTaskId.value = id;
+                    lastMetricsETag = '';
+                    metricsVisible.value = true;
+                    // 给 DOM 渲染留足时间，避免 Canvas 获取失败
+                    await nextTick();
+                    await new Promise(r => setTimeout(r, 50)); 
+                    
+                    metricsCanvas = document.getElementById('metricsChart');
+                    trendCanvas = document.getElementById('metricsTrend');
+                    
+                    if (metricsCanvas) {
+                        metricsCtx = metricsCanvas.getContext('2d');
+                        _drawMetricsChart();
+                    }
+                    if (trendCanvas) {
+                        trendCtx = trendCanvas.getContext('2d');
+                        _drawTrend();
+                    }
+                    
+                    _hydrateMetricsFromList(id);
+                    await _fetchMetricsOnce(id);
+                    if (metricsTimer) clearInterval(metricsTimer);
+                    metricsTimer = setInterval(() => _fetchMetricsOnce(id), 2000);
+                };
+                watch(() => metricsVisible.value, (v) => {
+                    if (!v && metricsTimer) {
+                        clearInterval(metricsTimer);
+                        metricsTimer = null;
+                        metricsCanvas = null;
+                        metricsCtx = null;
+                        trendCanvas = null;
+                        trendCtx = null;
+                    }
+                });
+                watch(() => metricsChartType.value, () => {
+                    if (!metricsVisible.value) return;
+                    _drawMetricsChart();
+                });
+                
+                const _hydrateMetricsFromList = (id) => {
+                    const t = tasks.value.find(x => x.task_id === id);
+                    if (!t || !t.metrics) return;
+                    const prev = [metricsCounts.full, metricsCounts.inc, metricsCounts.update, metricsCounts.delete];
+                    metricsCounts.full = t.metrics.full_insert_count || 0;
+                    metricsCounts.inc = t.metrics.inc_insert_count || 0;
+                    metricsCounts.update = t.metrics.update_count || 0;
+                    metricsCounts.delete = t.metrics.delete_count || 0;
+                    _animateCounts(prev, [metricsCounts.full, metricsCounts.inc, metricsCounts.update, metricsCounts.delete]);
+                    _drawTrend();
+                    _drawMetricsChart();
+                };
+
+                const createTask = async () => {
+                    // Prepare payload
+                    const payload = {
+                        task_id: form.task_id,
+                        table_map: {},
+                        pk_field: form.pk_field,
+                        update_insert_new_doc: syncMode.value === 'history',
+                        delete_append_new_doc: syncMode.value === 'history',
+                        auto_discover_new_tables: (!selectedTables.value || selectedTables.value.length === 0)
+                    };
+
+                    // Fill Table Map
+                    if (selectedTables.value && selectedTables.value.length > 0) {
+                        selectedTables.value.forEach(t => { payload.table_map[t] = t; });
+                    }
+                    // If full, table_map stays empty to trigger auto-discovery logic in worker
+
+                    // Fill MySQL Config
+                    if (sourceSelectionMode.value === 'saved' && selectedSourceId.value) {
+                        const res = await fetch('/connections/' + selectedSourceId.value);
+                        if (!res.ok) throw new Error('Failed to fetch source config');
+                        const cfg = await res.json();
+                        payload.mysql_conf = cfg;
+                    } else {
+                        payload.mysql_conf = {...form.mysql};
+                    }
+                    if (!selectedDatabase.value) {
+                        ElMessage.error('请选择 MySQL 数据库');
+                        return;
+                    }
+                    payload.mysql_conf.database = selectedDatabase.value;
+
+                    // Fill Mongo Config
+                    if (targetSelectionMode.value === 'saved' && selectedTargetId.value) {
+                        const res = await fetch('/connections/' + selectedTargetId.value);
+                        if (!res.ok) throw new Error('Failed to fetch target config');
+                        const cfg = await res.json();
+                        payload.mongo_conf = cfg;
+                        // Allow override DB
+                        if (form.mongo.database) payload.mongo_conf.database = form.mongo.database;
+                    } else {
+                        payload.mongo_conf = {...form.mongo};
+                    }
+
+                    creating.value = true;
+                    try {
+                        const res = await fetch('/tasks/start', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(payload)
+                        });
+                        if (res.ok) {
+                            ElMessage.success('Task Started');
+                            createVisible.value = false;
+                            currentView.value = 'tasks';
+                            fetchTasks();
+                        } else {
+                            const err = await res.json();
+                            ElMessage.error('Error: ' + JSON.stringify(err));
+                        }
+                    } catch(e) { ElMessage.error(e.message); }
+                    finally { creating.value = false; }
+                };
+
+                const getStatusType = (s) => {
+                    if (s === 'running') return 'success';
+                    if (s === 'error') return 'danger';
+                    return 'warning';
+                };
+                
+                const formatTime = (ts) => ts ? new Date(ts * 1000).toLocaleString() : '-';
+
+                onMounted(() => {
+                    fetchTasks();
+                    fetchConnections();
+                });
+                // Reset test status if critical fields change
+                watch(() => [connForm.type, connForm.host, connForm.port, connForm.mongo_hosts, connForm.replica_set, connForm.user, connForm.password, connForm.database, connForm.auth_source], () => {
+                    if (connVisible.value) {
+                        testPassed.value = false;
+                        testMsg.value = '';
+                    }
+                });
+                // Adjust default port when type changes
+                watch(() => connForm.type, (t) => {
+                    if (t === 'mongo') {
+                        connForm.port = 27017;
+                    } else {
+                        connForm.port = 3306;
+                    }
+                }, { immediate: true });
+                // Reset tables when database changes
+                watch(() => selectedDatabase.value, () => {
+                    selectedTables.value = [];
+                    mysqlTableList.value = [];
+                });
+                // Reset db list when source connection changes
+                watch(() => selectedSourceId.value, () => {
+                    selectedDatabase.value = '';
+                    mysqlDbList.value = [];
+                    selectedTables.value = [];
+                    mysqlTableList.value = [];
+                });
+
+                return {
+                    currentView, tasks, connections,
+                    createVisible, activeStep, creating, form,
+                    sourceSelectionMode, targetSelectionMode, selectedSourceId, selectedTargetId,
+                    connVisible, connForm, editingConnId,
+                    mysqlConnections, mongoConnections, syncScope, syncMode,
+                    testing, testPassed, testMsg,
+                    handleMenuSelect, showCreateDialog, showConnDialog, saveConnection, deleteConnection, testConnection,
+                    editConnection,
+                    confirmStop, confirmStart, confirmResetAndStart, confirmReset, confirmDelete, viewLogs,
+                    logsVisible, logsTaskId, logsLines,
+                    metricsVisible, metricsCounts, openStats,
+                    metricsChartType, displayCounts,
+                    tablesVisible, tablesTaskId, tablesPage, tablesPageSize, tablesTotal, tablesPageData,
+                    truncateTables, openTables, handleTablesPageChange,
+                    // mysql db/table selects
+                    mysqlDbList, mysqlTableList, selectedDatabase, selectedTables,
+                    loadMysqlDatabasesSaved, loadMysqlDatabasesManual, loadMysqlTables,
+                    createTask, getStatusType, formatTime
+                };
+            }
+        });
+
+        app.use(ElementPlus);
+        for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+            app.component(key, component)
+        }
+        app.mount('#app');
+    </script>
+</body>
+</html>

@@ -28,47 +28,42 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: root
     volumes:
       - mongo1_data:/data/db
-      - ./mongo_conf:/etc/mongo_conf:ro
+      - mongo_keyfile:/etc/mongo_key:ro
     command: >
       bash -c "
-        cp /etc/mongo_conf/mongo-keyfile /etc/mongo-keyfile &&
-        chmod 400 /etc/mongo-keyfile &&
-        chown mongodb:mongodb /etc/mongo-keyfile 2>/dev/null || true &&
-        exec mongod --replSet rs0 --bind_ip_all --keyFile /etc/mongo-keyfile
+        exec mongod --replSet rs0 --bind_ip_all --keyFile /etc/mongo_key/mongo-keyfile
       "
 
   mongo2:
     image: mongo:latest
     container_name: mongo2
+    ports:
+      - "27019:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
     volumes:
       - mongo2_data:/data/db
-      - ./mongo_conf:/etc/mongo_conf:ro
+      - mongo_keyfile:/etc/mongo_key:ro
     command: >
       bash -c "
-        cp /etc/mongo_conf/mongo-keyfile /etc/mongo-keyfile &&
-        chmod 400 /etc/mongo-keyfile &&
-        chown mongodb:mongodb /etc/mongo-keyfile 2>/dev/null || true &&
-        exec mongod --replSet rs0 --bind_ip_all --keyFile /etc/mongo-keyfile
+        exec mongod --replSet rs0 --bind_ip_all --keyFile /etc/mongo_key/mongo-keyfile
       "
 
   mongo3:
     image: mongo:latest
     container_name: mongo3
+    ports:
+      - "27020:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
     volumes:
       - mongo3_data:/data/db
-      - ./mongo_conf:/etc/mongo_conf:ro
+      - mongo_keyfile:/etc/mongo_key:ro
     command: >
       bash -c "
-        cp /etc/mongo_conf/mongo-keyfile /etc/mongo-keyfile &&
-        chmod 400 /etc/mongo-keyfile &&
-        chown mongodb:mongodb /etc/mongo-keyfile 2>/dev/null || true &&
-        exec mongod --replSet rs0 --bind_ip_all --keyFile /etc/mongo-keyfile
+        exec mongod --replSet rs0 --bind_ip_all --keyFile /etc/mongo_key/mongo-keyfile
       "
 
   # 3. 自动初始化副本集
@@ -105,6 +100,21 @@ services:
         echo 'Replica set init done.'
       "
     restart: "no"
+  
+  # 3.1 统一初始化副本集 keyFile（所有节点共享）
+  mongo_key_init:
+    image: alpine:3.19
+    entrypoint: >
+      sh -c "
+        if [ ! -f /key/mongo-keyfile ]; then
+          dd if=/dev/urandom bs=741 count=1 2>/dev/null | base64 > /key/mongo-keyfile;
+          chmod 400 /key/mongo-keyfile;
+        fi
+        ls -l /key/mongo-keyfile
+      "
+    volumes:
+      - mongo_keyfile:/key
+    restart: "no"
 
   syncer_app:
     build:
@@ -115,20 +125,25 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/app/app
+      - ./static:/app/static        # static 挂载，前端页面
       - ./state:/app/state          # state 持久化
       - ./configs:/app/configs      # configs 持久化（任务恢复需要）
+      - ./connections:/app/connections # 连接信息持久化
+      - ./configs_keys:/app/configs_keys # 密钥持久化
     depends_on:
       - mysql_source
       - mongo1
       - mongo2
       - mongo3
       - mongo_rs_init
+      - mongo_key_init
     environment:
       PYTHONUNBUFFERED: "1"
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]
 
 volumes:
   mysql_data:
   mongo1_data:
   mongo2_data:
   mongo3_data:
+  mongo_keyfile:

@@ -96,6 +96,35 @@ class SyncWorker:
         self._auto_mode = (not bool(cfg.table_map))
         self._table_refresh_ts_holder = {"ts": 0.0}
 
+        # Status tracking
+        self._status = "initializing"
+        self._metrics = {
+            "phase": "init",
+            "current_table": "",
+            "processed_count": 0,
+            "speed": 0,
+            "binlog_file": "",
+            "binlog_pos": 0,
+            "last_update": time.time(),
+            "insert_count": 0,
+            "full_insert_count": 0,
+            "inc_insert_count": 0,
+            "update_count": 0,
+            "delete_count": 0
+        }
+
+    def get_status(self) -> Dict[str, Any]:
+        return {
+            "task_id": self.cfg.task_id,
+            "status": self._status,
+            "metrics": self._metrics,
+            "config": {
+                "mysql": f"{self.cfg.mysql_conf.host}:{self.cfg.mysql_conf.port}",
+                "mongo": f"{self.cfg.mongo_conf.host}:{self.cfg.mongo_conf.port}",
+                "tables": list(self.cfg.table_map.keys()) if self.cfg.table_map else ["*"]
+            }
+        }
+
     def stop(self):
         self.stop_event.set()
         try:
@@ -145,16 +174,22 @@ class SyncWorker:
     # =========================
     def run(self):
         log(self.cfg.task_id, f"Task started (HardDelete={self.cfg.hard_delete})")
+        self._status = "running"
         try:
             self._auto_build_table_map_if_needed()
             state = load_state(self.cfg.task_id)
 
             if not state:
+                self._metrics["phase"] = "full_sync"
                 self.do_full_sync()
+                self._metrics["phase"] = "inc_sync"
                 self.do_inc_sync_with_reconnect(None, None)
             else:
+                self._metrics["phase"] = "inc_sync"
                 self.do_inc_sync_with_reconnect(state.get("log_file"), state.get("log_pos"))
         except Exception as e:
+            self._status = "error"
+            self._metrics["error"] = str(e)
             log(self.cfg.task_id, f"CRASH {type(e).__name__}: {str(e)[:300]}")
 
     def do_full_sync(self):
@@ -180,6 +215,8 @@ class SyncWorker:
                     ops: List = []
                     start = time.time()
                     log(self.cfg.task_id, f"FullSync table={table} -> collection={coll_name}")
+                    
+                    self._metrics["current_table"] = table
 
                     while not self.stop_event.is_set():
                         if last_id is None:
@@ -204,10 +241,12 @@ class SyncWorker:
                                 ops.append(InsertOne(doc))
 
                             processed += 1
+                            self._metrics["full_insert_count"] += 1
                             if len(ops) >= mongo_batch:
                                 self.mongo_writer.safe_bulk_write(coll, ops, table, coll_name)
                                 ops.clear()
 
+                        self._metrics["processed_count"] = processed
                         self._maybe_progress_log(f"FullSync prog table={table} done={processed}")
 
                     if ops:
@@ -240,6 +279,9 @@ class SyncWorker:
                 cur_log_pos = state.get("log_pos", cur_log_pos)
                 log(self.cfg.task_id, f"MySQL OpErr. retry={retry} err={str(e)[:200]}")
             except Exception as e:
+                if self.stop_event.is_set() or "Already closed" in str(e) or "closed" in str(e).lower():
+                    log(self.cfg.task_id, "IncSync stopped by user or stream closed")
+                    break
                 retry += 1
                 state = load_state(self.cfg.task_id) or {}
                 cur_log_file = state.get("log_file", cur_log_file)
@@ -285,6 +327,7 @@ class SyncWorker:
         inc_batch = int(self.cfg.inc_flush_batch or 2000)
         flush_interval = max(1, int(self.cfg.inc_flush_interval_sec or 2))
 
+        log(self.cfg.task_id, f"IncSync connecting to MySQL {self.mysql_settings.get('host')}:{self.mysql_settings.get('port')}...")
         log(self.cfg.task_id, f"IncSync started events={[e.__name__ for e in only_events]} from={log_file}:{log_pos}")
         log(
             self.cfg.task_id,
@@ -314,8 +357,14 @@ class SyncWorker:
             for ev in self.stream:
                 if self.stop_event.is_set():
                     break
+                
+                # update metrics
+                self._metrics["binlog_file"] = self.stream.log_file
+                self._metrics["binlog_pos"] = self.stream.log_pos
+                self._metrics["last_update"] = time.time()
 
                 table = ev.table
+                self._metrics["current_table"] = table or ""
                 if self.cfg.debug_binlog_events:
                     log(self.cfg.task_id, f"EV {type(ev).__name__} table={table}")
 
@@ -328,6 +377,10 @@ class SyncWorker:
 
                 # ---------------- Insert: base upsert ----------------
                 if isinstance(ev, WriteRowsEvent):
+                    try:
+                        self._metrics["inc_insert_count"] += max(1, len(getattr(ev, "rows", []) or []))
+                    except Exception:
+                        self._metrics["inc_insert_count"] += 1
                     for row in ev.rows:
                         data = row.get("values")
                         data = self.mysql_introspector.maybe_fix_row_unknown_cols(table, data)
@@ -342,6 +395,10 @@ class SyncWorker:
 
                 # ---------------- Update: new version doc ----------------
                 elif isinstance(ev, UpdateRowsEvent):
+                    try:
+                        self._metrics["update_count"] += max(1, len(getattr(ev, "rows", []) or []))
+                    except Exception:
+                        self._metrics["update_count"] += 1
                     for row in ev.rows:
                         data = row.get("after_values")
                         data = self.mysql_introspector.maybe_fix_row_unknown_cols(table, data)
@@ -371,6 +428,10 @@ class SyncWorker:
 
                 # ---------------- Delete: soft mark base doc only ----------------
                 elif isinstance(ev, DeleteRowsEvent) and self.cfg.handle_deletes:
+                    try:
+                        self._metrics["delete_count"] += max(1, len(getattr(ev, "rows", []) or []))
+                    except Exception:
+                        self._metrics["delete_count"] += 1
                     for row in ev.rows:
                         data = row.get("values")
                         data = self.mysql_introspector.maybe_fix_row_unknown_cols(table, data)

@@ -1,186 +1,250 @@
-# MySQL to MongoDB 企业级数据同步服务
+# MySQL to MongoDB Sync Service (MySQL 转 MongoDB 数据同步服务)
 
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![Docker](https://img.shields.io/badge/docker-ready-green.svg)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/your-org/mysql-to-mongo)
+[![Python](https://img.shields.io/badge/python-3.8%2B-green.svg)](https://www.python.org/)
+[![MySQL](https://img.shields.io/badge/MySQL-5.7%20%7C%208.0-orange.svg)](https://www.mysql.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-4.4%2B-green.svg)](https://www.mongodb.com/)
+[![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg)](https://www.docker.com/)
 
-这是一个高性能、高容错的 **MySQL 到 MongoDB 实时数据同步服务**，专为金融级审计系统与数据湖构建。支持 **全量同步**、**Binlog 增量同步（CDC）**、**数据多版本控制** 以及 **无损软删除**。
+## 📖 项目简介 (Introduction)
 
-本服务采用 **Append-Only（仅追加）** 架构设计，确保源端 UPDATE/DELETE 操作绝不篡改 MongoDB 中的历史快照，完美满足审计溯源与时间旅行查询（Time-Travel Query）需求。
+**MySQL to MongoDB Sync Service** 是一款企业级的数据同步中间件，专注于将 MySQL 数据实时、高效地同步至 MongoDB。它不仅支持**全量历史数据迁移**，还集成了基于 Binlog 的 **CDC (Change Data Capture)** 机制，实现毫秒级的增量数据实时同步。
 
----
-
-## ✅ 支持版本 (Compatibility)
-
-| 组件 | 支持版本 | 说明 |
-| :--- | :--- | :--- |
-| **MySQL** | 5.7, 8.0, 8.4 (LTS) | 必须开启 Binlog (`binlog_format=ROW`) |
-| **MongoDB** | 4.4, 5.0, 6.0, 7.0+ | 建议使用副本集 (Replica Set) 或分片集群 |
-| **Python** | 3.9+ | 基础运行环境 |
-| **Docker** | 20.10+ | 推荐部署方式 |
+本项目专为高可用和数据一致性设计，内置了现代化的 **Web 管理界面**，用户可以通过浏览器轻松完成任务创建、状态监控和数据可视化分析。
 
 ---
 
-## 🚀 核心特性
+## 🏗 系统架构 (Architecture)
 
-- **双模同步引擎**:
-  - **全量同步 (Full Sync)**: 基于游标的高效批量导出，支持断点续传。
-  - **增量同步 (CDC)**: 实时解析 MySQL Binlog (ROW 模式)，实现毫秒级延迟。
-- **数据一致性与安全**:
-  - **高精度数值**: 全程使用 `Decimal128` 处理金额字段，杜绝浮点数精度丢失。
-  - **写入幂等性**: 自动抑制 `E11000` 重复键错误，确保“至少一次”投递不导致数据崩溃。
-  - **故障恢复**: 自动持久化 Binlog 位点，重启后自动无缝续传。
-- **审计与溯源 (Append-Only)**:
-  - **基础文档不可变**: Base Collection 仅存储初始快照，后续 UPDATE/DELETE 绝不修改原文档。
-  - **版本链 (Versioning)**: 每次 UPDATE 生成一条全新的 Version 文档，完整记录变更前后的数据快照。
-  - **墓碑机制 (Tombstone)**: DELETE 操作仅追加一条“删除标记”文档，实现物理留痕、逻辑删除。
-- **企业级安全**:
-  - **配置加密**: 数据库账号密码在落盘前自动使用 **AES-GCM (256-bit)** 加密。
-  - **密钥隔离**: 每个同步任务自动生成独立密钥 (`./configs_keys/`)，杜绝明文泄露。
-
----
-
-## 🏗 系统架构
-
-### 数据流向
+本系统采用模块化设计，核心组件包括同步引擎（Sync Engine）、任务管理器（Task Manager）和持久化存储（State Store）。
 
 ```mermaid
-flowchart LR
-    MySQL[(MySQL Source)] -->|Binlog Stream| Syncer[Sync Engine]
-    Syncer -->|Write Ops| Mongo[(MongoDB)]
-    
-    subgraph Mongo Storage Strategy
-        Base[Base Collection]
-        Version[Version Collection]
+graph TB
+    subgraph Source [数据源]
+        MySQL[(MySQL Database)]
+        Binlog[Binlog Stream]
     end
 
-    Syncer --> Base
-    Syncer --> Version
+    subgraph SyncService [同步服务核心]
+        TM[Task Manager 任务调度]
+        FullSync[Full Sync Engine 全量引擎]
+        IncSync[CDC Sync Engine 增量引擎]
+        StateStore[State Store 状态存储]
+    end
+
+    subgraph WebUI [Web 管理界面]
+        Dashboard[仪表盘 Dashboard]
+        TaskMgr[任务管理]
+        Visual[可视化图表]
+    end
+
+    subgraph Destination [目标存储]
+        Mongo[(MongoDB Cluster)]
+        BaseColl[Base Collection (最新态)]
+        HistColl[Version Collection (历史态)]
+    end
+
+    MySQL --> FullSync
+    MySQL -.-> Binlog
+    Binlog --> IncSync
+    
+    TM --> FullSync
+    TM --> IncSync
+    
+    FullSync --> Mongo
+    IncSync --> Mongo
+    
+    IncSync -.-> StateStore
+    StateStore -.-> IncSync
+    
+    Mongo --> BaseColl
+    Mongo --> HistColl
+
+    WebUI -.-> TM
+
+    style Source fill:#e1f5fe,stroke:#01579b
+    style SyncService fill:#fff3e0,stroke:#ff6f00
+    style Destination fill:#e8f5e9,stroke:#2e7d32
+    style WebUI fill:#f3e5f5,stroke:#7b1fa2
 ```
-
-### 存储模型设计
-
-1. **Base Document (基准快照)**
-   - 来源：全量同步阶段 或 首次 INSERT。
-   - 标识：`_id` = `MySQL 主键`。
-   - 特性：**不可变 (Immutable)**，作为历史回溯的基准点。
-
-2. **Version Document (历史版本)**
-   - 来源：UPDATE 事件。
-   - 结构：`_id` (New ObjectId), `_base_id` (关联 Base), `_op` ("update"), `data` (行快照)。
-   - 作用：构建完整的数据变更时间轴。
-
-3. **Tombstone Document (删除墓碑)**
-   - 来源：DELETE 事件。
-   - 结构：`_id` (New ObjectId), `_base_id` (关联 Base), `_op` ("delete"), `deleted_at`。
-   - 作用：保留删除痕迹，支持数据恢复与审计。
 
 ---
 
-## 🛠 快速部署
+## ✨ 核心特性 (Features)
 
-### 1. 启动服务 (Docker Compose)
-
-```bash
-# 克隆项目
-git clone <repo_url>
-cd mysql-to-mongo
-
-# 启动服务集群
-docker-compose up -d --build
-```
-
-### 2. 验证状态
-- **API 文档**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **MongoDB**: `mongodb://localhost:27018`
-
-### 3. 持久化目录说明
-务必妥善保管以下目录：
-- `./configs`: 存储 **加密后** 的任务配置文件。
-- `./configs_keys`: 存储任务对应的 **解密密钥** (🔴 **核心机密，请备份**)。
-- `./state`: 存储 Binlog 同步位点，用于断点续传。
+*   **🖥️ 现代化 Web UI**: 内置 Vue3 + Element Plus 管理后台，提供直观的操作体验。
+*   **🚀 全量与增量无缝切换**: 自动完成历史数据全量迁移后，无缝切换至 Binlog 增量监听模式。
+*   **🔄 实时 CDC 同步**: 基于 `mysql-replication` 库解析 ROW 格式 Binlog，实现低延迟数据同步。
+*   **📊 可视化监控**: 
+    *   **实时仪表盘**: 查看所有任务的运行状态、同步阶段、处理行数。
+    *   **动态图表**: ECharts 驱动的实时流量趋势图（Insert/Update/Delete）及占比分析。
+*   **📜 数据版本化 (Versioning)**: 支持保留 UPDATE 操作的历史版本，每一次变更都可追溯（存入 `_ver` 集合）。
+*   **🗑️ 软删除支持 (Soft Delete)**: DELETE 操作可配置为软删除，保留数据快照以供审计或恢复。
+*   **💾 断点续传**: 自动记录同步进度，服务崩溃或重启后自动恢复，保证数据不重不漏。
 
 ---
 
-## 🔒 安全配置与任务管理
+## 🖥️ Web 管理界面 (Web UI)
 
-所有通过 API 提交的数据库凭据均会在内存中即时加密，磁盘上仅存储密文。
+本项目提供功能完善的 Web 控制台，默认端口 `8000`。
 
-### 创建同步任务
+### 1. 仪表盘 (Dashboard)
+*   **全局概览**: 卡片式展示所有同步任务。
+*   **关键指标**: 实时显示当前同步阶段（Full/Inc）、已处理数据量、当前 Binlog 位点及延迟情况。
+*   **快捷操作**: 支持一键查看日志、打开监控图表、停止/重启任务。
 
-**POST** `/tasks/start`
+### 2. 任务管理 (Task Management)
+*   **向导式创建**: 通过简单的四步向导（基本信息 -> 源库配置 -> 目标库配置 -> 映射规则）快速创建同步任务。
+*   **连接复用**: 支持保存 MySQL 和 MongoDB 连接配置，创建任务时直接选择，无需重复输入。
+*   **同步模式**:
+    *   **History Mode**: 保留变更历史，适用于数据审计。
+    *   **Mirror Mode**: 镜像同步，目标端与源端保持完全一致。
 
+### 3. 数据源管理 (Data Sources)
+*   **统一管理**: 集中管理所有 MySQL 和 MongoDB 的连接信息。
+*   **连接测试**: 内置连接测试功能，确保数据库连通性。
+
+### 4. 实时监控 (Real-time Metrics)
+*   **趋势分析**: 提供 Insert (Full/Inc)、Update、Delete 的实时速率曲线。
+*   **数据统计**: 环形图展示各类操作的占比，直观了解数据变更分布。
+
+---
+
+## 🛠 支持环境 (Supported Environments)
+
+| 组件 | 版本要求 | 说明 |
+| :--- | :--- | :--- |
+| **Python** | 3.8+ | 推荐使用 Python 3.9 或更高版本 |
+| **MySQL** | 5.7, 8.0+ | 必须开启 Binlog (`binlog_format=ROW`) |
+| **MongoDB** | 4.4+ | 推荐使用 Replica Set 模式以支持事务 |
+| **Browser** | Chrome/Edge/Firefox | 需要支持 ES6+ 的现代浏览器 |
+
+---
+
+## 🚀 快速开始 (Quick Start)
+
+### 方式一：Docker 部署（推荐）
+
+1.  **构建镜像**
+    ```bash
+    docker build -t mysql-to-mongo:v1.1.0 .
+    ```
+
+2.  **启动服务**
+    ```bash
+    docker run -d \
+      --name mysql-to-mongo \
+      -p 8000:8000 \
+      -e PYTHONUNBUFFERED=1 \
+      -v $(pwd)/configs:/app/configs \
+      -v $(pwd)/state:/app/state \
+      --restart unless-stopped \
+      mysql-to-mongo:v1.1.0
+    ```
+
+### 方式二：本地源码运行
+
+1.  **克隆项目**
+    ```bash
+    git clone https://github.com/your-org/mysql-to-mongo.git
+    cd mysql-to-mongo
+    ```
+
+2.  **安装依赖**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3.  **启动服务**
+    ```bash
+    uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ```
+
+4.  **访问管理后台**
+    打开浏览器访问: `http://localhost:8000/ui/index.html`
+
+---
+
+## ⚙️ 配置说明 (Configuration)
+
+### MySQL 配置要求
+MySQL 必须开启 Binary Log 并设置为 ROW 模式：
+```ini
+[mysqld]
+server_id = 1
+log_bin = mysql-bin
+binlog_format = ROW
+binlog_row_image = FULL
+```
+
+### 任务配置示例
+在 API 中创建任务或直接修改 JSON 配置文件：
 ```json
 {
-  "task_id": "trade_order_sync",
-  "mysql_conf": {
-    "host": "mysql_source",
+  "task_id": "task_001",
+  "mysql": {
+    "host": "127.0.0.1",
     "port": 3306,
     "user": "root",
-    "password": "strong_password",
-    "database": "order_db"
+    "password": "password",
+    "database": "source_db"
   },
-  "mongo_conf": {
-    "host": "mongo1",
+  "mongo": {
+    "host": "127.0.0.1",
     "port": 27017,
-    "user": "root",
-    "password": "root",
-    "database": "data_lake",
-    "auth_source": "admin"
+    "database": "target_db"
   },
-  "table_map": {
-    "t_orders": "orders_collection"
-  },
-  "pk_field": "id",
-  
-  // 核心配置：开启追加模式
-  "delete_append_new_doc": true,
-  "update_insert_new_doc": true,
-  
-  // 自动表结构发现
-  "auto_discover_new_tables": true
+  "mappings": [
+    {
+      "source": "users",
+      "target": "users"
+    }
+  ]
 }
 ```
 
 ---
 
-## 🧩 目录结构
+## 📂 目录结构 (Project Structure)
 
 ```text
-.
+mysql_to_mongo/
 ├── app/
-│   ├── api/                 # REST API 接口层
-│   ├── core/                # 核心组件 (加密, 配置管理, 日志)
-│   ├── sync/                # 同步引擎
-│   │   ├── worker.py        # 主同步进程 (Full + Inc Loop)
-│   │   ├── mongo_writer.py  # 批量写入与错误抑制处理
-│   │   └── convert.py       # 类型转换 (Decimal/Date)
-│   └── main.py              # 服务入口
-├── configs/                 # [持久化] 加密任务配置
-├── configs_keys/            # [持久化] 任务密钥
-├── state/                   # [持久化] Binlog 位点
-├── Dockerfile               # 生产级镜像构建文件
-└── docker-compose.yml       # 本地开发编排
+│   ├── main.py                  # FastAPI 应用入口
+│   ├── api/                     # REST API 路由与模型
+│   ├── core/                    # 核心组件 (Config, Logging, State)
+│   └── sync/                    # 同步引擎核心代码
+│       ├── worker.py            # 同步工作线程 (Full + CDC)
+│       ├── task_manager.py      # 任务管理
+│       ├── mysql_introspector.py# MySQL 表结构解析
+│       └── mongo_writer.py      # MongoDB 写入封装
+├── configs/                     # 任务配置文件存储
+├── state/                       # 同步状态(位点)存储
+├── static/                      # 前端 UI 资源
+│   ├── index.html               # 单页应用入口
+│   └── vendor/                  # 第三方库
+├── Dockerfile                   # Docker 构建文件
+└── requirements.txt             # Python 依赖列表
 ```
 
 ---
 
-## ⚠️ 运维指南
+## 📝 版本历史 (Changelog)
 
-1. **任务恢复**:
-   - 服务重启时，会自动加载 `configs/` 下的任务并解密，读取 `state/` 位点自动恢复同步。
-   - **强制重跑全量**: 停止任务后，删除 `state/<task_id>.json` 并重启即可。
+### v1.1.0 (2025-01-04)
+*   **Feature**: 全新 Web 管理界面，集成 ECharts 可视化图表。
+*   **Feature**: 支持 MySQL 连接测试与数据库/表自动发现。
+*   **Optimization**: 优化全量同步与增量同步的指标统计，区分 Full/Inc 插入。
+*   **Fix**: 修复优雅停机时的异常日志问题。
+*   **Fix**: 增加 ETag 支持，优化前端轮询性能。
 
-2. **Schema 变更**:
-   - 支持 MySQL 新增列的自动识别与同步 (需开启 `unknown_col_fix_enabled`)。
-   - 支持新表的自动发现与同步 (需开启 `auto_discover_new_tables`)。
-
-3. **日志监控**:
-   - 查看实时日志: `docker logs -f syncer_app`
-   - **注意**: `E11000` (Duplicate Key) 错误会被视为幂等成功而在日志中抑制，这是正常行为。
+### v1.0.0 (2025-01-01)
+*   Initial Release
+*   支持 MySQL 全量导出至 MongoDB
+*   支持 Binlog 增量实时同步
 
 ---
 
-## 📜 开源协议
+## 📄 许可证 (License)
 
-MIT License. 详情请参阅 [LICENSE](LICENSE) 文件。
+[MIT License](LICENSE) © 2025 Your Organization
