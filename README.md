@@ -81,6 +81,9 @@ graph TB
 *   **📜 数据版本化 (Versioning)**: 支持保留 UPDATE 操作的历史版本，每一次变更都可追溯（存入 `_ver` 集合）。
 *   **🗑️ 软删除支持 (Soft Delete)**: DELETE 操作可配置为软删除，保留数据快照以供审计或恢复。
 *   **💾 断点续传**: 自动记录同步进度，服务崩溃或重启后自动恢复，保证数据不重不漏。
+*   **⚡ 高性能引擎**: 全量阶段采用**并行预取**与 `insert_many` 快速路径，增量阶段支持**批量聚合**写入。
+*   **🛡️ 自适应速率限制 (Adaptive Rate Limiter)**: 根据系统 LoadAvg 与 CPU 使用率自动调节同步速率，防止在业务高峰期占用过多资源。
+*   **🚨 智能监控与告警**: 集成日志关键词监控与 Slack 告警，自动发现并通知异常日志。
 
 ---
 
@@ -165,6 +168,20 @@ graph TB
 
 ---
 
+## ⚙️ 性能调优 (Performance Tuning)
+
+针对十亿级数据量的同步需求，系统提供了多项性能与资源控制参数：
+
+| 参数 | 默认值 | 说明 |
+| :--- | :--- | :--- |
+| `full_sync_fast_insert_if_empty` | `true` | 全量同步时，如果目标集合为空，直接使用 `insert_many` 跳过 Upsert 检查，大幅提升写入速度。 |
+| `prefetch_queue_size` | `2` | 全量同步的 MySQL 读取预取队列大小，实现读写并行。资源充足时可调大至 3-5。 |
+| `rate_limit_enabled` | `true` | 是否启用自适应速率限制器。 |
+| `max_load_avg_ratio` | `0.8` | 触发限速的系统负载阈值（LoadAvg / CPU核心数）。建议设置为 0.6-0.8。 |
+| `mongo_compressors` | `["snappy", "zlib"]` | MongoDB 网络传输压缩算法，有效降低带宽占用。 |
+
+---
+
 ## ⚙️ 配置说明 (Configuration)
 
 ### MySQL 配置要求
@@ -230,6 +247,14 @@ mysql_to_mongo/
 ---
 
 ## 📝 版本历史 (Changelog)
+
+### v1.2.0 (2026-01-05)
+*   **Performance**: 全量同步引入 MySQL 预取队列与 `insert_many` 快速路径，大幅提升吞吐量。
+*   **Feature**: 新增自适应速率限制器 (Adaptive Rate Limiter)，根据系统负载动态调整同步速率。
+*   **Feature**: 启用 MongoDB 网络压缩 (Snappy/Zlib)，降低带宽占用。
+*   **Feature**: 增加 Monitor 任务类型，支持日志关键词监控与告警。
+*   **UI**: 仪表盘全新改版，支持响应式布局、环形图概览与可折叠面板。
+*   **Optimization**: 移除 ECharts 依赖，改用原生 Canvas 绘制图表，提升加载速度并解决 CSP 问题。
 
 ### v1.1.0 (2025-01-04)
 *   **Feature**: 全新 Web 管理界面，集成 ECharts 可视化图表。
