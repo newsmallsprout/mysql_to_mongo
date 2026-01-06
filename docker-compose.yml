@@ -12,6 +12,7 @@ services:
       MYSQL_DATABASE: testdb
     volumes:
       - ./mysql_conf/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./mysql_init:/docker-entrypoint-initdb.d:ro
       - mysql_data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
 
@@ -130,6 +131,7 @@ services:
       - ./configs:/app/configs      # configs 持久化（任务恢复需要）
       - ./connections:/app/connections # 连接信息持久化
       - ./configs_keys:/app/configs_keys # 密钥持久化
+      - ./logs:/app/logs            # 日志持久化
     depends_on:
       - mysql_source
       - mongo1

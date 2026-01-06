@@ -35,11 +35,6 @@ class MonitorEngine:
         self._level_counts = {"error": 0, "warn": 0, "info": 0, "other": 0}
         
         # Pre-compile regex
-        self.API_KEY_RE = re.compile(r"(API\s*Key|api[_-]?key)[：:=]\s*\S+", re.IGNORECASE)
-        self.SENSITIVE_TOKEN_RE = re.compile(
-            r"""(?<![A-Za-z0-9])(?=[A-Za-z0-9]{20,})(?=.*?[A-Z])(?=.*?[a-z])(?=.*?\d)[A-Za-z0-9]{20,}(?![A-Za-z0-9])""",
-            re.VERBOSE
-        )
         self.JAVA_EXCEPTION_LINE_RE = re.compile(
             r"(?:^|\b)(?:[a-zA-Z_][\w$]*\.)+(?:[A-Z][\w$]*Exception|Error)\b"
         )
@@ -73,12 +68,17 @@ class MonitorEngine:
         self.start()
 
     def get_status(self):
+        # Mask sensitive info in status response
+        safe_cfg = self.cfg.model_dump()
+        safe_cfg["es_password"] = "***" if self.cfg.es_password else ""
+        safe_cfg["slack_webhook_url"] = "***" if self.cfg.slack_webhook_url else ""
+        
         return {
             "status": self._status,
             "last_run": datetime.fromtimestamp(self._last_run_ts).isoformat() if self._last_run_ts else None,
             "alerts_sent": self._total_alerts_sent,
             "last_error": self._last_error,
-            "config": self.cfg.model_dump(),
+            "config": safe_cfg,
             "levels": dict(self._level_counts)
         }
 
@@ -138,26 +138,6 @@ class MonitorEngine:
         for k in expired:
             state.pop(k, None)
         return state
-
-    def _mask_sensitive(self, text: str) -> str:
-        if not text:
-            return text
-        safe_lines = []
-        for line in text.splitlines():
-            raw = line
-            if raw.strip().startswith("- Location："):
-                safe_lines.append(raw)
-                continue
-            if raw.strip().startswith("- API Key"):
-                safe_lines.append(self.API_KEY_RE.sub(r"\1：****", raw))
-                continue
-            if raw.strip().startswith("- Exception"):
-                masked = self.API_KEY_RE.sub(r"\1：****", raw)
-                masked = self.SENSITIVE_TOKEN_RE.sub("****", masked)
-                safe_lines.append(masked)
-                continue
-            safe_lines.append(self.API_KEY_RE.sub(r"\1：****", raw))
-        return "\n".join(safe_lines)
 
     def _normalize_message(self, msg: str) -> str:
         if not msg:
@@ -240,10 +220,12 @@ class MonitorEngine:
         start = datetime.fromtimestamp(start_ts, tz=timezone.utc).replace(tzinfo=None)
         
         body = {
-            "size": 0,
+            "size": int(self.cfg.es_batch_size or 500),
+            "track_total_hits": False,
+            "_source": ["logMessage", "timestamp", "serviceName", "podName"],
             "query": {
                 "bool": {
-                    "must": [
+                    "filter": [
                         {"range": {"timestamp": {"gte": start.isoformat(), "lte": now.isoformat()}}}
                     ],
                     "should": [
@@ -254,6 +236,7 @@ class MonitorEngine:
                             }
                         },
                         *[{"match_phrase": {"logMessage": kw}} for kw in self.cfg.alert_keywords],
+                        *[{"match_phrase": {"logMessage": kw}} for kw in self.cfg.record_only_keywords],
                     ],
                     "minimum_should_match": 1,
                     "must_not": [
@@ -261,25 +244,7 @@ class MonitorEngine:
                     ],
                 }
             },
-            "aggs": {
-                "by_service": {
-                    "terms": {"field": "serviceName.keyword", "size": 50},
-                    "aggs": {
-                        "by_pod": {
-                            "terms": {"field": "podName.keyword", "size": 50},
-                            "aggs": {
-                                "logs": {
-                                    "top_hits": {
-                                        "size": 50,
-                                        "_source": ["logMessage", "timestamp"],
-                                        "sort": [{"timestamp": {"order": "asc"}}],
-                                    }
-                                }
-                            },
-                        }
-                    },
-                }
-            },
+            "sort": [{"timestamp": {"order": "asc"}}, {"_id": {"order": "asc"}}],
         }
 
         try:
@@ -296,107 +261,91 @@ class MonitorEngine:
         new_alerts = []
         alerts_to_send = [] # Keys that met the alert criteria in this run
         total_seen_this_run = 0
-        aggs = resp.get("aggregations", {})
-        window_counts = {}  # (service, pod, level) -> count
-        group_keys = {}     # (service, pod, level) -> [rec_keys]
-        
-        for s in aggs.get("by_service", {}).get("buckets", []):
-            service = s.get("key", "unknown")
-            for p in s.get("by_pod", {}).get("buckets", []):
-                pod = p.get("key", "unknown")
-                hits = p.get("logs", {}).get("hits", {}).get("hits", [])
-                if not hits: continue
-                
-                for h in hits:
-                    total_seen_this_run += 1
-                    source = h.get("_source", {})
-                    raw_msg = source.get("logMessage", "")
-                    ts = source.get("timestamp") or now.isoformat()
-                    # Try to parse timestamp from string to int for history tracking
-                    # If not possible, use current time
-                    try:
-                        # Standard ISO format: 2023-01-01T12:00:00.000Z
-                        # Simplification: use current loop time for tracking frequency
-                        msg_ts = now_ts 
-                    except:
-                        msg_ts = now_ts
-
-                    safe_msg = self._mask_sensitive(raw_msg)
-                    key = self._build_dedupe_key(service, pod, safe_msg)
-                    
-                    # Check for immediate alert keywords
-                    is_immediate = any(kw.lower() in raw_msg.lower() for kw in self.cfg.alert_keywords)
-
-                    # classify log level and accumulate counts
-                    lvl = self._classify_level(raw_msg)
-                    if lvl in self._level_counts:
-                        self._level_counts[lvl] += 1
-                    else:
-                        self._level_counts["other"] += 1
-                    window_counts[(service, pod, lvl)] = window_counts.get((service, pod, lvl), 0) + 1
-                    if lvl == "error":
-                        try:
-                            disp = self._normalize_for_display(safe_msg)
-                        except Exception:
-                            disp = safe_msg
-                        log("monitor", f"[{service}/{pod}] ERROR {ts} {disp[:500]}")
-
-                    rec = state.get(key)
-                    if rec is None:
-                        rec = {
-                            "count": 0,
-                            "first_seen": ts,
-                            "last_seen": ts,
-                            "last_seen_ts": now_ts,
-                            "service": service,
-                            "pod": pod,
-                            "sample": safe_msg[:2000],
-                            "history": [], # List of timestamps
-                            "last_alert_ts": 0
-                        }
-                        state[key] = rec
-                        # First time seeing this error
-                        new_alerts.append(key)
-
-                    # Update Stats
-                    rec["count"] = int(rec.get("count", 0)) + 1
-                    rec["last_seen"] = ts
-                    rec["last_seen_ts"] = now_ts
-                    
-                    # Manage History (Sliding Window 60s)
-                    history = rec.get("history", [])
-                    history.append(now_ts)
-                    # Prune old timestamps (> 60s ago)
-                    history = [t for t in history if t > now_ts - 60]
-                    rec["history"] = history
+        window_counts = {}
+        group_keys = {}
+        hits = resp.get("hits", {}).get("hits", [])
+        last_processed_ts = start_ts
+        for h in hits:
+            total_seen_this_run += 1
+            source = h.get("_source", {})
+            raw_msg = source.get("logMessage", "")
+            ts = source.get("timestamp") or now.isoformat()
+            service = source.get("serviceName", "unknown")
+            pod = source.get("podName", "unknown")
+            try:
+                if isinstance(ts, str):
+                    t = ts.replace("Z", "+00:00")
+                    msg_dt = datetime.fromisoformat(t)
+                    msg_ts = int(msg_dt.timestamp())
+                elif isinstance(ts, (int, float)):
+                    msg_ts = int(ts)
+                else:
+                    msg_ts = now_ts
+            except:
+                msg_ts = now_ts
+            if msg_ts > last_processed_ts:
+                last_processed_ts = msg_ts
+            safe_msg = raw_msg
+            key = self._build_dedupe_key(service, pod, safe_msg)
+            is_immediate = any(kw.lower() in raw_msg.lower() for kw in self.cfg.alert_keywords)
+            is_record_only = any(kw.lower() in raw_msg.lower() for kw in self.cfg.record_only_keywords)
+            lvl = self._classify_level(raw_msg)
+            if lvl in self._level_counts:
+                self._level_counts[lvl] += 1
+            else:
+                self._level_counts["other"] += 1
+            window_counts[(service, pod, lvl)] = window_counts.get((service, pod, lvl), 0) + 1
+            if lvl == "error":
+                try:
+                    disp = self._normalize_for_display(safe_msg)
+                except Exception:
+                    disp = safe_msg
+                log("monitor", f"[{service}/{pod}] ERROR {ts} {disp[:500]}")
+            rec = state.get(key)
+            if rec is None:
+                rec = {
+                    "count": 0,
+                    "first_seen": ts,
+                    "last_seen": ts,
+                    "last_seen_ts": now_ts,
+                    "service": service,
+                    "pod": pod,
+                    "sample": safe_msg[:2000],
+                    "history": [],
+                    "last_alert_ts": 0
+                }
+                state[key] = rec
+                new_alerts.append(key)
+            rec["count"] = int(rec.get("count", 0)) + 1
+            rec["last_seen"] = ts
+            rec["last_seen_ts"] = now_ts
+            history = rec.get("history", [])
+            history.append(now_ts)
+            history = [t for t in history if t > now_ts - 60]
+            rec["history"] = history
+            state[key] = rec
+            lst = group_keys.get((service, pod, lvl))
+            if lst is None:
+                lst = []
+                group_keys[(service, pod, lvl)] = lst
+            lst.append(key)
+            should_alert = False
+            if is_immediate:
+                should_alert = True
+            elif len(history) > 3:
+                should_alert = True
+            if is_record_only and not is_immediate:
+                should_alert = False
+            last_alert = rec.get("last_alert_ts", 0)
+            if is_record_only and not should_alert:
+                if now_ts - last_alert > 60:
+                    rec["last_alert_ts"] = now_ts
                     state[key] = rec
-                    
-                    # Track keys by service/pod/level for possible group alerts
-                    lst = group_keys.get((service, pod, lvl))
-                    if lst is None:
-                        lst = []
-                        group_keys[(service, pod, lvl)] = lst
-                    lst.append(key)
-
-                    # Alert Logic
-                    should_alert = False
-                    
-                    # 1. Immediate Keyword Match
-                    # Only alert immediately if the message contains specific alert keywords
-                    if is_immediate:
-                        should_alert = True
-                    
-                    # 2. Frequency Threshold (> 3 times in 60s)
-                    # Otherwise, only alert if it occurs more than 3 times in 60 seconds
-                    elif len(history) > 3:
-                        should_alert = True
-                    
-                    # Check Cooldown (Don't alert more than once every 60s for the same key)
-                    last_alert = rec.get("last_alert_ts", 0)
-                    if should_alert and (now_ts - last_alert > 60):
-                        rec["last_alert_ts"] = now_ts
-                        alerts_to_send.append(key)
-                        state[key] = rec
+                    log("monitor", f"[RECORD_ONLY] [{service}/{pod}] {safe_msg[:500]}")
+            elif should_alert and (now_ts - last_alert > 60):
+                rec["last_alert_ts"] = now_ts
+                alerts_to_send.append(key)
+                state[key] = rec
 
         # Group-based alert: if error level count > 3 within window, trigger using latest key
         for (svc, pod, lvl), cnt in window_counts.items():
@@ -412,9 +361,9 @@ class MonitorEngine:
                         alerts_to_send.append(chosen)
 
         state.setdefault("_meta", {})
-        state["_meta"]["last_run_ts"] = now_ts
+        state["_meta"]["last_run_ts"] = int(last_processed_ts or now_ts)
         self._save_dedupe_state(state)
-        self._last_run_ts = now_ts
+        self._last_run_ts = int(last_processed_ts or now_ts)
         
         # Write scan summary to monitor logs
         error_run = sum(c for (svc, pod, lvl), c in window_counts.items() if lvl == "error")

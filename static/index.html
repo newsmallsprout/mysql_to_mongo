@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MySQL to Mongo Sync</title>
+    <link id="dynamic-favicon" rel="icon" href="">
     <script src="/ui/vendor/vue.global.prod.js"></script>
     <link rel="stylesheet" href="/ui/vendor/element-plus/index.css" />
     <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
@@ -25,7 +26,10 @@
         body { margin: 0; padding: 0; font-family: Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif; height: 100vh; overflow: hidden; background-color: var(--bg); }
         #app { height: 100%; display: flex; width: 100%; }
         .el-aside { background-color: #304156; color: #fff; transition: width 0.3s; width: 220px; display: flex; flex-direction: column; flex-shrink: 0; }
-        .logo { height: 60px; line-height: 60px; text-align: center; font-size: 18px; font-weight: 600; background-color: #2b3649; color: #fff; border-bottom: 1px solid #1f2d3d; letter-spacing: .2px; }
+        .logo { height: 60px; display:flex; align-items:center; justify-content:center; gap:10px; font-size: 18px; font-weight: 600; background-color: #2b3649; color: #fff; border-bottom: 1px solid #1f2d3d; letter-spacing: .2px; }
+        .brand-logo { width:28px; height:28px; border-radius:8px; background:#1f2d3d; position:relative; overflow:hidden; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
+        .brand-logo::before { content:""; position:absolute; inset:0; background-image: url('/ui/images/brand.png'); background-size: cover; background-position: center; filter: saturate(1.05) contrast(1.05); }
+        .brand-logo::after { content:""; position:absolute; inset:0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); border-radius:8px; }
         .el-menu { border-right: none; background-color: transparent; }
         .el-menu-item { color: #bfcbd9; }
         .el-menu-item:hover, .el-menu-item.is-active { background-color: #263445; color: #409EFF; }
@@ -81,12 +85,64 @@
             .dashboard-ring { order:1; }
         }
     </style>
+    <script>
+        // Generate rounded favicon from brand image to avoid white edges
+        (function(){
+            const linkEl = document.getElementById('dynamic-favicon');
+            function setDefaultIcon(){
+                const svg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="12" fill="#304156"/><circle cx="32" cy="32" r="18" fill="#409EFF"/></svg>');
+                linkEl.href = 'data:image/svg+xml;charset=utf-8,' + svg;
+            }
+            function setBrandIcon(img){
+                const size = 64;
+                const c = document.createElement('canvas');
+                c.width = c.height = size;
+                const ctx = c.getContext('2d');
+                ctx.clearRect(0,0,size,size);
+                // rounded background
+                const radius = 12;
+                ctx.fillStyle = '#2b3649';
+                ctx.beginPath();
+                ctx.moveTo(radius,0);
+                ctx.arcTo(size,0,size,size,radius);
+                ctx.arcTo(size,size,0,size,radius);
+                ctx.arcTo(0,size,0,0,radius);
+                ctx.arcTo(0,0,size,0,radius);
+                ctx.closePath();
+                ctx.fill();
+                // circular clip for image
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(size/2, size/2, size*0.36, 0, Math.PI*2);
+                ctx.closePath();
+                ctx.clip();
+                // draw image centered and cover
+                const iw = img.naturalWidth || img.width;
+                const ih = img.naturalHeight || img.height;
+                const s = Math.max(size*0.8/iw, size*0.8/ih);
+                const dw = iw*s, dh = ih*s;
+                ctx.drawImage(img, (size-dw)/2, (size-dh)/2, dw, dh);
+                ctx.restore();
+                // subtle inner ring
+                ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(size/2, size/2, size*0.36, 0, Math.PI*2);
+                ctx.stroke();
+                linkEl.href = c.toDataURL('image/png');
+            }
+            const img = new Image();
+            img.onload = function(){ setBrandIcon(img); };
+            img.onerror = function(){ setDefaultIcon(); };
+            img.src = '/ui/images/brand.png';
+        })();
+    </script>
 </head>
 <body>
     <div id="app">
         <!-- Sidebar -->
         <el-aside>
-            <div class="logo">Sync Platform</div>
+            <div class="logo"><span class="brand-logo"></span><span>Sync Platform</span></div>
             <el-menu :default-active="currentView" @select="handleMenuSelect" text-color="#bfcbd9" active-text-color="#409EFF" background-color="#304156">
                 <el-menu-item index="dashboard">
                     <el-icon><Odometer /></el-icon>
@@ -472,6 +528,19 @@
                                     </el-select>
                                     <div style="font-size: 12px; color: #909399; line-height: 1.2; margin-top: 4px;">Log messages matching these phrases will trigger alerts (OR logic).</div>
                                 </el-form-item>
+
+                                <el-form-item label="Record Only">
+                                    <el-select 
+                                        v-model="monitorConfig.record_only_keywords" 
+                                        multiple 
+                                        filterable 
+                                        allow-create 
+                                        default-first-option 
+                                        placeholder="Type and hit enter" 
+                                        style="width: 100%">
+                                    </el-select>
+                                    <div style="font-size: 12px; color: #909399; line-height: 1.2; margin-top: 4px;">Logs matching these phrases will be recorded locally but NOT sent to Slack.</div>
+                                </el-form-item>
                                 
                                 <el-form-item label="Ignore Keywords">
                                     <el-select 
@@ -694,6 +763,39 @@
         </el-dialog>
         
                 <el-dialog v-model="logsVisible" title="Task Logs" width="800px" destroy-on-close append-to-body center>
+            <div style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                 <el-row :gutter="10" align="middle">
+                    <el-col :span="6">
+                        <el-input v-model="logsDownloadKeyword" placeholder="Filter/Download keyword" size="small" clearable></el-input>
+                    </el-col>
+                    <el-col :span="10">
+                        <el-date-picker
+                            v-model="logsDownloadTimeRange"
+                            type="datetimerange"
+                            range-separator="To"
+                            start-placeholder="Start time"
+                            end-placeholder="End time"
+                            size="small"
+                            style="width: 100%">
+                        </el-date-picker>
+                    </el-col>
+                    <el-col :span="4">
+                         <el-button type="primary" size="small" icon="Download" @click="downloadLogs">Download</el-button>
+                    </el-col>
+                    <el-col :span="4" style="text-align: right;">
+                        <el-pagination
+                            v-model:current-page="logsPage"
+                            v-model:page-size="logsLineCount"
+                            :page-sizes="[100, 500, 1000]"
+                            :small="true"
+                            layout="sizes, prev, next"
+                            :total="logsTotal"
+                            @size-change="handleLogsSizeChange"
+                            @current-change="handleLogsPageChange">
+                        </el-pagination>
+                    </el-col>
+                 </el-row>
+            </div>
             <div style="background-color: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 4px; height: 500px; overflow-y: auto; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; line-height: 1.5;">
                 <div v-if="logsLines.length === 0" style="color: #666; text-align: center; margin-top: 200px;">No logs available</div>
                 <div v-for="(line, idx) in logsLines" :key="idx">{{ line.trim() }}</div>
@@ -758,10 +860,10 @@
     <script>
         const { createApp, ref, reactive, onMounted, computed, watch, nextTick } = Vue;
         const { ElMessage, ElMessageBox } = ElementPlus;
-        const { Odometer, List, Connection, Plus, Delete, Right, Edit } = ElementPlusIconsVue;
+        const { Odometer, List, Connection, Plus, Delete, Right, Edit, Download } = ElementPlusIconsVue;
 
                 const app = createApp({
-                    components: { Odometer, List, Connection, Plus, Delete, Right, Edit },
+                    components: { Odometer, List, Connection, Plus, Delete, Right, Edit, Download },
                     setup() {
                         const currentView = ref('dashboard');
                         const tasks = ref([]);
@@ -780,7 +882,12 @@
                 const syncMode = ref('history');
                 const logsVisible = ref(false);
                 const logsTaskId = ref('');
+                const logsLineCount = ref(100);
+                const logsPage = ref(1);
+                const logsTotal = ref(0);
                 const logsLines = ref([]);
+                const logsDownloadKeyword = ref('');
+                const logsDownloadTimeRange = ref([]);
                 let logsTimer = null;
 
                 // Monitor
@@ -1053,7 +1160,7 @@
                         connForm.name = cfg.name || id;
                         connForm.type = cfg.type || 'mysql';
                         connForm.user = cfg.user || '';
-                        connForm.password = cfg.password || '';
+                        connForm.password = '';
                         connForm.database = cfg.database || '';
                         connForm.auth_source = cfg.auth_source || 'admin';
                         if (connForm.type === 'mongo') {
@@ -1074,9 +1181,8 @@
                             connForm.mongo_hosts = '';
                             connForm.replica_set = '';
                         }
-                        // Allow updating without re-test until fields are changed
-                        testPassed.value = true;
-                        testMsg.value = '已加载历史配置（如有修改请重新测试）';
+                        testPassed.value = false;
+                        testMsg.value = '为安全起见，请重新输入密码并测试连接';
                         editingConnId.value = id;
                         connVisible.value = true;
                     } catch(e) {
@@ -1085,6 +1191,10 @@
                 };
 
                 const testConnection = async () => {
+                    if (connForm.type === 'mysql' && (!connForm.password || !connForm.password.trim())) {
+                        ElMessage.error('请输入密码后再测试连接');
+                        return;
+                    }
                     testing.value = true;
                     testPassed.value = false;
                     testMsg.value = '';
@@ -1114,6 +1224,10 @@
                 };
 
                 const saveConnection = async () => {
+                    if (connForm.type === 'mysql' && (!connForm.password || !connForm.password.trim())) {
+                        ElMessage.error('请输入密码后再保存');
+                        return;
+                    }
                     if (!testPassed.value) {
                         ElMessage.error('请先测试连接，成功后再保存');
                         return;
@@ -1261,16 +1375,27 @@
                     tablesPageData.value = arr.slice(start, end).map(n => ({ name: n }));
                 };
                 
+                const fetchLogs = async () => {
+                    if (!logsTaskId.value) return;
+                    try {
+                        const res = await fetch(`/tasks/logs/${logsTaskId.value}?page=${logsPage.value}&page_size=${logsLineCount.value}&_=${Date.now()}`);
+                        const data = await res.json();
+                        logsLines.value = data.lines || [];
+                        logsTotal.value = data.total || 0;
+                        if (data.page) logsPage.value = data.page;
+                    } catch (e) {
+                        console.error('Fetch logs error:', e);
+                    }
+                };
+
                 const viewLogs = async (id) => {
                     try {
                         logsTaskId.value = id;
+                        logsLineCount.value = 100;
+                        logsPage.value = -1; // Request last page
                         logsVisible.value = true;
                         await nextTick();
-                        const fetchLogs = async () => {
-                            const res = await fetch(`/tasks/logs/${id}?lines=500&_=${Date.now()}`);
-                            const data = await res.json();
-                            logsLines.value = data.lines || [];
-                        };
+                        
                         await fetchLogs();
                         if (logsTimer) clearInterval(logsTimer);
                         logsTimer = setInterval(fetchLogs, 2000);
@@ -1279,6 +1404,28 @@
                         ElMessage.error('Failed to load logs: ' + (e?.message || e));
                     }
                 };
+                
+                const handleLogsPageChange = () => fetchLogs();
+                const handleLogsSizeChange = () => fetchLogs();
+
+                const downloadLogs = () => {
+                    let url = `/tasks/logs/${logsTaskId.value}/download?t=${Date.now()}`;
+                    if (logsDownloadKeyword.value) {
+                        url += `&keyword=${encodeURIComponent(logsDownloadKeyword.value)}`;
+                    }
+                    if (logsDownloadTimeRange.value && logsDownloadTimeRange.value.length === 2) {
+                        // Format: YYYY-MM-DD HH:MM:SS
+                        const fmt = (d) => {
+                            const pad = (n) => n < 10 ? '0' + n : n;
+                            return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+                        };
+                        const start = fmt(new Date(logsDownloadTimeRange.value[0]));
+                        const end = fmt(new Date(logsDownloadTimeRange.value[1]));
+                        url += `&start_time=${encodeURIComponent(start)}&end_time=${encodeURIComponent(end)}`;
+                    }
+                    window.open(url, '_blank');
+                };
+
                 // Close logs dialog clears timer
                 watch(() => logsVisible.value, (v) => {
                     if (!v && logsTimer) {
@@ -1653,6 +1800,15 @@
                 };
 
                 const saveMonitorConfig = async () => {
+                    if (!monitorConfig.value.slack_webhook_url) {
+                        ElMessage.error('Slack Webhook URL 不能为空，请重新输入');
+                        return;
+                    }
+                    if (!monitorConfig.value.es_password) {
+                        ElMessage.error('Elasticsearch Password 不能为空，请重新输入');
+                        return;
+                    }
+
                     monitorSaving.value = true;
                     try {
                         const res = await fetch('/monitor/config', {
@@ -1664,7 +1820,9 @@
                             ElMessage.success('Configuration saved & monitor restarted');
                             fetchMonitorStatus();
                         } else {
-                            ElMessage.error('Failed to save configuration');
+                            let err = {};
+                            try { err = await res.json(); } catch(_) {}
+                            ElMessage.error('Failed to save configuration: ' + (err.detail || 'Unknown error'));
                         }
                     } catch (e) { ElMessage.error(e.message); }
                     finally { monitorSaving.value = false; }
@@ -1784,7 +1942,8 @@
                     handleMenuSelect, showCreateDialog, showConnDialog, saveConnection, deleteConnection, testConnection,
                     editConnection,
                     confirmStop, confirmStart, confirmResetAndStart, confirmReset, confirmDelete, viewLogs,
-                    logsVisible, logsTaskId, logsLines,
+                    logsVisible, logsTaskId, logsLines, logsLineCount, logsPage, logsTotal, handleLogsPageChange, handleLogsSizeChange,
+                    logsDownloadKeyword, logsDownloadTimeRange, downloadLogs,
                     metricsVisible, metricsCounts, openStats,
                     metricsChartType, displayCounts,
                     tablesVisible, tablesTaskId, tablesPage, tablesPageSize, tablesTotal, tablesPageData,

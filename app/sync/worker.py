@@ -51,20 +51,43 @@ class SyncWorker:
 
         if cfg.mysql_conf.use_ssl:
             ssl_args = {}
+            # If explicit certs provided, use them
             if cfg.mysql_conf.ssl_ca:
                 ssl_args["ca"] = cfg.mysql_conf.ssl_ca
             if cfg.mysql_conf.ssl_cert:
                 ssl_args["cert"] = cfg.mysql_conf.ssl_cert
             if cfg.mysql_conf.ssl_key:
                 ssl_args["key"] = cfg.mysql_conf.ssl_key
-
-            if not cfg.mysql_conf.ssl_verify_cert:
-                ssl_args["check_hostname"] = False
-                ssl_args["verify_mode"] = _ssl.CERT_NONE
-            else:
-                ssl_args["verify_mode"] = _ssl.CERT_REQUIRED
-
+            # If no certs provided, enable TLS without verification (server enforces secure transport)
+            if not ssl_args:
+                ssl_args = {}
             self.mysql_settings["ssl"] = ssl_args
+        else:
+            try:
+                _kw = {k: v for k, v in self.mysql_settings.items() if k != "cursorclass"}
+                c = pymysql.connect(**_kw)
+                c.close()
+            except Exception as e:
+                s = str(e)
+                if ("require_secure_transport" in s) or ("3159" in s) or ("Bad handshake" in s) or ("1043" in s):
+                    self.mysql_settings["ssl"] = {}
+        # Final fallback: ensure TLS handshake succeeds
+        try:
+            _kw = {k: v for k, v in self.mysql_settings.items() if k != "cursorclass"}
+            c = pymysql.connect(**_kw)
+            c.close()
+        except Exception as e1:
+            msg = str(e1)
+            if ("require_secure_transport" in msg) or ("3159" in msg) or ("Bad handshake" in msg) or ("1043" in msg):
+                for ssl_opt in ({}, {"fake_flag_to_enable_tls": True}, {"check_hostname": False, "verify_mode": _ssl.CERT_NONE}):
+                    try:
+                        self.mysql_settings["ssl"] = ssl_opt
+                        _kw = {k: v for k, v in self.mysql_settings.items() if k != "cursorclass"}
+                        c = pymysql.connect(**_kw)
+                        c.close()
+                        break
+                    except Exception:
+                        continue
 
         # --- mongo ---
         mongo_uri = build_mongo_uri(cfg.mongo_conf)

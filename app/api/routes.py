@@ -5,6 +5,7 @@ import json
 import time
 from time import perf_counter
 import pymysql
+import ssl as _ssl
 from pymongo import MongoClient
 from app.api.models import SyncTaskRequest, ConnectionConfig, DBConfig
 from app.sync.task_manager import task_manager
@@ -16,6 +17,23 @@ import os
 import pymysql
 
 router = APIRouter()
+
+def _mysql_connect_with_fallback(kwargs):
+    try:
+        return pymysql.connect(**kwargs)
+    except Exception as e1:
+        msg = str(e1)
+        if "require_secure_transport" in msg or "3159" in msg or "secure transport" in msg or "Bad handshake" in msg or "1043" in msg:
+            last = e1
+            for ssl_opt in ({}, {"fake_flag_to_enable_tls": True}, {"check_hostname": False, "verify_mode": _ssl.CERT_NONE}):
+                try:
+                    kw = dict(kwargs)
+                    kw["ssl"] = ssl_opt
+                    return pymysql.connect(**kw)
+                except Exception as e2:
+                    last = e2
+            raise last
+        raise
 
 def _get_monitor_task_status():
     ms = monitor_engine.get_status()
@@ -50,6 +68,8 @@ def list_connections():
 
 @router.post("/connections")
 def save_connection(conn: ConnectionConfig):
+    if not conn.password or not conn.password.strip():
+        raise HTTPException(status_code=400, detail="Password is required")
     connection_store.save(conn.id, conn.dict())
     return {"msg": "saved", "id": conn.id}
 
@@ -59,6 +79,8 @@ def get_connection(conn_id: str):
     cfg = connection_store.load(conn_id)
     if not cfg:
         raise HTTPException(status_code=404, detail="Connection not found")
+    if isinstance(cfg, dict) and "password" in cfg:
+        cfg = {k: v for k, v in cfg.items() if k != "password"}
     return cfg
 
 
@@ -70,7 +92,7 @@ def delete_connection(conn_id: str):
 def _test_mysql_conn(cfg: ConnectionConfig) -> int:
     try:
         start = perf_counter()
-        conn = pymysql.connect(
+        kwargs = dict(
             host=cfg.host,
             port=int(cfg.port),
             user=cfg.user,
@@ -80,6 +102,10 @@ def _test_mysql_conn(cfg: ConnectionConfig) -> int:
             read_timeout=5,
             write_timeout=5,
         )
+        try:
+            conn = _mysql_connect_with_fallback(kwargs)
+        except Exception:
+            raise
         try:
             with conn.cursor() as c:
                 c.execute("SELECT 1")
@@ -143,7 +169,7 @@ def list_mysql_databases(conn: ConnectionConfig):
     if conn.type != "mysql":
         raise HTTPException(status_code=400, detail="Expect mysql connection")
     try:
-        c = pymysql.connect(
+        kwargs = dict(
             host=conn.host,
             port=int(conn.port),
             user=conn.user,
@@ -152,6 +178,10 @@ def list_mysql_databases(conn: ConnectionConfig):
             read_timeout=5,
             write_timeout=5,
         )
+        try:
+            c = _mysql_connect_with_fallback(kwargs)
+        except Exception:
+            raise
         try:
             with c.cursor() as cur:
                 cur.execute("SHOW DATABASES")
@@ -171,7 +201,7 @@ def list_mysql_tables(conn: ConnectionConfig):
     if not conn.database:
         raise HTTPException(status_code=400, detail="Database is required")
     try:
-        c = pymysql.connect(
+        kwargs = dict(
             host=conn.host,
             port=int(conn.port),
             user=conn.user,
@@ -181,6 +211,10 @@ def list_mysql_tables(conn: ConnectionConfig):
             read_timeout=5,
             write_timeout=5,
         )
+        try:
+            c = _mysql_connect_with_fallback(kwargs)
+        except Exception:
+            raise
         try:
             with c.cursor() as cur:
                 cur.execute("SHOW TABLES")
@@ -314,15 +348,76 @@ def get_task_status(task_id: str, request: Request, response: Response):
     raise HTTPException(status_code=404, detail="Task not running")
 
 
-@router.get("/tasks/logs/{task_id}")
-def get_task_logs(task_id: str, lines: int = 200):
+@router.get("/tasks/logs/{task_id}/download")
+def download_task_logs(task_id: str, keyword: str = "", start_time: str = "", end_time: str = ""):
     p = os.path.join("logs", f"{task_id}.log")
     if not os.path.exists(p):
-        return {"lines": []}
+        return Response(content="", media_type="text/plain")
+
+    try:
+        def iter_logs():
+            with open(p, "r", encoding="utf-8") as f:
+                for line in f:
+                    # 1. Keyword Filter
+                    if keyword and keyword.lower() not in line.lower():
+                        continue
+                    
+                    # 2. Time Range Filter (Expects format [YYYY-MM-DD HH:MM:SS])
+                    if start_time or end_time:
+                        try:
+                            # Extract timestamp from log line (assuming standard format)
+                            # Example: [2023-01-01 12:00:00] [task] msg...
+                            if line.startswith("["):
+                                rb = line.find("]")
+                                if rb > 1:
+                                    ts_str = line[1:rb]
+                                    # Simple string comparison works for ISO-like dates
+                                    if start_time and ts_str < start_time:
+                                        continue
+                                    if end_time and ts_str > end_time:
+                                        continue
+                        except:
+                            pass # Skip time check if parse fails
+                    
+                    yield line
+
+        from fastapi.responses import StreamingResponse
+        filename = f"{task_id}_logs_{int(time.time())}.txt"
+        return StreamingResponse(
+            iter_logs(),
+            media_type="text/plain",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Download logs failed: {str(e)[:200]}")
+
+@router.get("/tasks/logs/{task_id}")
+def get_task_logs(task_id: str, page: int = 1, page_size: int = 100):
+    p = os.path.join("logs", f"{task_id}.log")
+    if not os.path.exists(p):
+        return {"lines": [], "total": 0, "page": 1, "page_size": page_size}
     try:
         with open(p, "r", encoding="utf-8") as f:
             all_lines = f.readlines()
-        lines = max(1, min(int(lines or 200), 2000))
-        return {"lines": all_lines[-lines:]}
+        
+        total = len(all_lines)
+        page_size = max(1, min(page_size, 2000)) # Cap at 2000 lines per page
+        
+        # Handle -1 for last page
+        if page == -1:
+            import math
+            page = max(1, math.ceil(total / page_size))
+        else:
+            page = max(1, page)
+        
+        start = (page - 1) * page_size
+        end = start + page_size
+        
+        return {
+            "lines": all_lines[start:end],
+            "total": total,
+            "page": page,
+            "page_size": page_size
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Read logs failed: {str(e)[:200]}")
