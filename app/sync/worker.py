@@ -545,6 +545,16 @@ class SyncWorker:
                                     UpdateOne({"_id": pk_val}, {"$set": set_doc}, upsert=self.cfg.delete_upsert_tombstone),
                                 )
 
+                try:
+                    self._metrics["processed_count"] = (
+                        int(self._metrics.get("full_insert_count") or 0)
+                        + int(self._metrics.get("inc_insert_count") or 0)
+                        + int(self._metrics.get("update_count") or 0)
+                        + int(self._metrics.get("delete_count") or 0)
+                    )
+                except Exception:
+                    pass
+
                 buf.flush_if_reach_batch()
                 buf.flush(force=False)
 

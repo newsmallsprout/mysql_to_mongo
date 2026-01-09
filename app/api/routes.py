@@ -1,6 +1,5 @@
 # app/api/routes.py
-from fastapi import APIRouter, HTTPException, Response, Request
-    from fastapi import Body
+from fastapi import APIRouter, HTTPException, Response, Request, Body
 import hashlib
 import json
 import time
@@ -15,7 +14,6 @@ from app.core.uri import build_mongo_uri
 from app.monitor.engine import monitor_engine
 from app.monitor.store import save_monitor_config
 import os
-import pymysql
 from typing import Optional, Dict, Any
 
 router = APIRouter()

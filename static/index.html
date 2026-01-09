@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MySQL to Mongo Sync</title>
+    <title>Shark Platfrom</title>
     <link id="dynamic-favicon" rel="icon" href="">
     <script src="/ui/vendor/vue.global.prod.js"></script>
     <link rel="stylesheet" href="/ui/vendor/element-plus/index.css" />
     <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
     <script src="/ui/vendor/element-plus/index.full.min.js"></script>
+    <script src="/ui/vendor/echarts/echarts.min.js"></script>
     <script src="/ui/vendor/icons/index.iife.min.js"></script>
     <script>
         (function(){
@@ -19,40 +20,42 @@
             ensure(function(){ return window.Vue; }, 'https://unpkg.com/vue@3/dist/vue.global.prod.js');
             ensure(function(){ return window.ElementPlus; }, 'https://unpkg.com/element-plus');
             ensure(function(){ return window.ElementPlusIconsVue; }, 'https://unpkg.com/@element-plus/icons-vue');
+            ensure(function(){ return window.echarts && window.echarts.version; }, 'https://unpkg.com/echarts@5/dist/echarts.min.js');
         })();
     </script>
     <style>
-        :root { --bg:#f5f7fa; --card:#ffffff; --shadow:0 8px 24px rgba(0,0,0,.08); --text:#303133; --muted:#909399; --primary:#409EFF; }
-        body { margin: 0; padding: 0; font-family: Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif; height: 100vh; overflow: hidden; background-color: var(--bg); }
+        body { margin: 0; padding: 0; font-family: Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif; height: 100vh; overflow: hidden; background-color: #f6f8f9; color: #303133; }
         #app { height: 100%; display: flex; width: 100%; }
         .el-aside { background-color: #304156; color: #fff; transition: width 0.3s; width: 220px; display: flex; flex-direction: column; flex-shrink: 0; }
-        .logo { height: 60px; display:flex; align-items:center; justify-content:center; gap:10px; font-size: 18px; font-weight: 600; background-color: #2b3649; color: #fff; border-bottom: 1px solid #1f2d3d; letter-spacing: .2px; }
-        .brand-logo { width:28px; height:28px; border-radius:8px; background:#1f2d3d; position:relative; overflow:hidden; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
-        .brand-logo::before { content:""; position:absolute; inset:0; background-image: url('/ui/images/brand.png'); background-size: cover; background-position: center; filter: saturate(1.05) contrast(1.05); }
-        .brand-logo::after { content:""; position:absolute; inset:0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); border-radius:8px; }
+        .logo { height: 60px; display:flex; align-items:center; justify-content:center; gap:10px; font-size: 18px; font-weight: 700; background-color: #2b3649; color: #fff; }
+        .logo .logo-icon { color: #ffd04b; font-size: 20px; }
+        .brand-logo { width:32px; height:32px; border-radius:6px; background: rgba(255,255,255,0.1); position:relative; overflow:hidden; }
+        .brand-logo::before { content:""; position:absolute; inset:0; background-image: url('/ui/images/brand.png'); background-size: cover; background-position: center; }
         .el-menu { border-right: none; background-color: transparent; }
         .el-menu-item { color: #bfcbd9; }
-        .el-menu-item:hover, .el-menu-item.is-active { background-color: #263445; color: #409EFF; }
-        .el-main { background-color: var(--bg); padding: 24px; overflow-y: auto; flex: 1; height: 100%; box-sizing: border-box; }
-        .page-header { background: var(--card); padding: 18px 22px; margin: -24px -24px 20px -24px; box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; border-radius: 12px; }
-        .page-header h2 { margin: 0; font-weight: 600; letter-spacing: .2px; }
-        .el-card { border-radius: 12px; box-shadow: var(--shadow); border: none; }
+        .el-menu-item:hover { background-color: #263445 !important; }
+        .el-menu-item.is-active { color: #409EFF; background-color: #1f2d3d !important; }
+        .el-main { background: linear-gradient(rgba(240, 242, 245, 0.4), rgba(240, 242, 245, 0.4)), url('/ui/images/beijing.png'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; padding: 24px; overflow-y: auto; flex: 1; height: 100%; box-sizing: border-box; }
+        .page-header { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 16px 24px; margin: -24px -24px 20px -24px; box-shadow: 0 1px 4px rgba(0,21,41,.08); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.3); }
+        .page-header h2 { margin: 0; font-weight: 600; color: #303133; }
+        .el-card { border-radius: 8px; border: 1px solid rgba(255,255,255,0.6); background-color: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(0,0,0,0.05); color: #303133; transition: all 0.3s ease; }
+        .el-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
         .card-header { display: flex; justify-content: space-between; align-items: center; }
         .metric-item { margin-bottom: 8px; font-size: 14px; color: #606266; display: flex; justify-content: space-between; }
-        .metric-label { font-weight: 500; color: var(--text); }
-        .section-title { font-size: 16px; font-weight: 600; margin: 20px 0 10px; padding-left: 10px; border-left: 4px solid var(--primary); letter-spacing: .2px; }
+        .metric-label { font-weight: 500; }
+        .section-title { font-size: 16px; font-weight: 600; margin: 20px 0 10px; padding-left: 10px; border-left: 4px solid #409EFF; color: #303133; }
         .mapping-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
         .mode-group .el-radio { display: block; margin-bottom: 6px; }
-        .mode-desc { margin: 4px 0 12px 26px; color: var(--muted); font-size: 12px; }
-        .el-tag { border-radius: 12px; font-weight: 600; padding: 0 8px; }
-        .el-button.is-plain { background-color: #fff; }
-
+        .mode-desc { margin: 4px 0 12px 26px; color: #909399; font-size: 12px; }
+        .el-tag { border-radius: 4px; }
+        
         /* Monitor Styles */
-        .stat-card-compact { display: flex; align-items: center; padding: 20px; background: #fff; border-radius: 4px; box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1); height: 100px; box-sizing: border-box; }
-        .stat-icon { width: 48px; height: 48px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; margin-right: 16px; }
+        .stat-card-compact { display: flex; align-items: center; padding: 20px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.05); height: 100px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.6); transition: all 0.3s ease; }
+        .stat-card-compact:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+        .stat-icon { width: 48px; height: 48px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; margin-right: 16px; }
         .stat-content { flex: 1; overflow: hidden; }
         .stat-label { color: #909399; font-size: 14px; margin-bottom: 5px; }
-        .stat-number { font-size: 20px; font-weight: bold; color: #303133; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #303133; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
         .icon-blue { background-color: #409EFF; }
         .icon-green { background-color: #67C23A; }
@@ -61,22 +64,22 @@
 
         /* Monitor Layout */
         .monitor-container { max-width: 100%; }
-        .monitor-actions .el-button { border-radius: 20px; padding: 6px 14px; font-weight: 500; }
+        .monitor-actions .el-button { border-radius: 4px; padding: 8px 15px; }
         .monitor-actions .el-button.is-plain { background-color: #fff; }
-        .monitor-actions .el-button + .el-button { margin-left: 2px; }
-        .monitor-actions .el-button .el-icon { transform: translateY(1px); }
+        .monitor-actions .el-button + .el-button { margin-left: 10px; }
         .config-section-title { font-size: 15px; font-weight: bold; color: #303133; margin-bottom: 15px; display: flex; align-items: center; }
         .config-section-title:before { content: ""; display: inline-block; width: 3px; height: 14px; background: #409EFF; margin-right: 8px; border-radius: 2px; }
 
         /* Tiles */
-        .tile { display:flex; align-items:center; justify-content:space-between; background:#fff; border-radius:12px; box-shadow: var(--shadow); padding:16px 18px; }
+        .tile { display:flex; align-items:center; justify-content:space-between; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.05); padding:16px 20px; border:1px solid rgba(255,255,255,0.6); transition: all 0.3s ease; }
+        .tile:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
         .tile-left { display:flex; align-items:center; gap:12px; }
-        .tile-icon { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; }
-        .tile-icon.primary { background:#409EFF; }
-        .tile-icon.success { background:#67C23A; }
-        .tile-icon.warning { background:#E6A23C; }
-        .tile-value { font-size:26px; font-weight:700; color:#303133; }
-        .tile-label { font-size:13px; color:#909399; }
+        .tile-icon { width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; }
+        .tile-icon.primary { background-color: #409EFF; }
+        .tile-icon.success { background-color: #67C23A; }
+        .tile-icon.warning { background-color: #E6A23C; }
+        .tile-value { font-size:24px; font-weight:bold; color:#303133; }
+        .tile-label { font-size:14px; color:#909399; }
         .dashboard-layout { display:flex; flex-direction:column; gap:0; }
         .dashboard-overview { order:1; }
         .dashboard-ring { order:2; }
@@ -101,7 +104,7 @@
                 ctx.clearRect(0,0,size,size);
                 // rounded background
                 const radius = 12;
-                ctx.fillStyle = '#2b3649';
+                ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.moveTo(radius,0);
                 ctx.arcTo(size,0,size,size,radius);
@@ -124,7 +127,7 @@
                 ctx.drawImage(img, (size-dw)/2, (size-dh)/2, dw, dh);
                 ctx.restore();
                 // subtle inner ring
-                ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+                ctx.strokeStyle = 'rgba(0,0,0,0.1)';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.arc(size/2, size/2, size*0.36, 0, Math.PI*2);
@@ -142,7 +145,7 @@
     <div id="app">
         <!-- Sidebar -->
         <el-aside>
-            <div class="logo"><span class="brand-logo"></span><span>Sync Platform</span></div>
+            <div class="logo"><span class="brand-logo"></span><el-icon class="logo-icon"><Lightning /></el-icon><span>shark Platform</span></div>
             <el-menu :default-active="currentView" @select="handleMenuSelect" text-color="#bfcbd9" active-text-color="#409EFF" background-color="#304156">
                 <el-menu-item index="dashboard">
                     <el-icon><Odometer /></el-icon>
@@ -159,6 +162,10 @@
                 <el-menu-item index="monitor">
                     <el-icon><Bell /></el-icon>
                     <span>Log Monitoring</span>
+                </el-menu-item>
+                <el-menu-item index="inspection">
+                    <el-icon><Aim /></el-icon>
+                    <span>Inspection</span>
                 </el-menu-item>
             </el-menu>
         </el-aside>
@@ -405,8 +412,6 @@
                 </el-table>
             </div>
 
-        </el-main>
-
         <!-- MONITOR VIEW -->
             <div v-if="currentView === 'monitor'" class="monitor-container">
                 <div class="page-header">
@@ -576,6 +581,227 @@
                     </el-form>
                 </el-card>
             </div>
+
+            <!-- INSPECTION VIEW -->
+            <div v-if="currentView === 'inspection'">
+                <div class="page-header">
+                    <h2>System Inspection</h2>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <el-button @click="inspectionConfigVisible = true">
+                            <el-icon style="margin-right: 5px"><Setting /></el-icon> Configuration
+                        </el-button>
+                        <el-button @click="viewLogs('inspection')">
+                            <el-icon style="margin-right: 5px"><List /></el-icon> Logs
+                        </el-button>
+                        <el-button type="primary" @click="runInspection" :loading="inspectionLoading">
+                            <el-icon style="margin-right: 5px"><VideoPlay /></el-icon> Run Inspection
+                        </el-button>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom: 14px;">
+                    <el-select v-model="inspectionHistorySelected" filterable clearable placeholder="选择历史日报" style="width: 220px;">
+                        <el-option v-for="id in inspectionHistoryList" :key="id" :label="id" :value="id"></el-option>
+                    </el-select>
+                    <el-button @click="fetchInspectionHistory" :loading="inspectionHistoryLoading">刷新列表</el-button>
+                    <el-button type="primary" plain @click="loadInspectionReport" :disabled="!inspectionHistorySelected">加载</el-button>
+                    <el-button type="info" plain @click="openWeeklyReport" :disabled="!inspectionReport || !inspectionReport.weekly_report_id">周报</el-button>
+                    <el-button type="info" plain @click="openMonthlyReport" :disabled="!inspectionReport || !inspectionReport.monthly_report_id">月报</el-button>
+                </div>
+
+                <div v-if="inspectionReport">
+                    <!-- Charts Row -->
+                    <el-row :gutter="20" style="margin-bottom: 20px;">
+                        <el-col :span="12">
+                            <el-card>
+                                <template #header><div class="card-header"><span>Down Targets by Job</span></div></template>
+                                <div id="inspTargetsChart" style="height: 300px;"></div>
+                            </el-card>
+                        </el-col>
+                        <el-col :span="12">
+                            <el-card>
+                                <template #header><div class="card-header"><span>Alerts Severity Distribution</span></div></template>
+                                <div id="inspAlertsChart" style="height: 300px;"></div>
+                            </el-card>
+                        </el-col>
+                    </el-row>
+
+                    <el-row :gutter="20" style="margin-bottom: 20px;">
+                        <el-col :span="8">
+                            <el-card>
+                                <template #header><div class="card-header"><span>CPU Top5</span></div></template>
+                                <div id="inspCpuTopChart" style="height: 260px;"></div>
+                            </el-card>
+                        </el-col>
+                        <el-col :span="8">
+                            <el-card>
+                                <template #header><div class="card-header"><span>Memory Top5</span></div></template>
+                                <div id="inspMemTopChart" style="height: 260px;"></div>
+                            </el-card>
+                        </el-col>
+                        <el-col :span="8">
+                            <el-card>
+                                <template #header><div class="card-header"><span>Disk(/) Top5</span></div></template>
+                                <div id="inspDiskTopChart" style="height: 260px;"></div>
+                            </el-card>
+                        </el-col>
+                    </el-row>
+
+                    <el-card style="margin-bottom: 20px;">
+                        <template #header><div class="card-header"><span>趋势与预测</span></div></template>
+                        <div v-if="inspectionReport.risk_summary" style="display:flex; gap:18px; flex-wrap:wrap;">
+                            <div class="metric-item" style="min-width:260px;">
+                                <span class="metric-label">今日风险分</span>
+                                <span style="font-weight:700;">{{ inspectionReport.risk_summary.score }}（{{ inspectionReport.risk_summary.level }}）</span>
+                            </div>
+                            <div class="metric-item" style="min-width:260px;" v-if="inspectionReport.compare_with_yesterday && inspectionReport.compare_with_yesterday.delta">
+                                <span class="metric-label">较昨日风险分</span>
+                                <span style="font-weight:700;">{{ inspectionReport.compare_with_yesterday.delta.risk_score }}</span>
+                            </div>
+                            <div class="metric-item" style="min-width:260px;" v-if="inspectionReport.compare_with_yesterday && inspectionReport.compare_with_yesterday.delta">
+                                <span class="metric-label">Down Targets 变化</span>
+                                <span style="font-weight:700;">{{ inspectionReport.compare_with_yesterday.delta.down_targets }}</span>
+                            </div>
+                            <div class="metric-item" style="min-width:260px;" v-if="inspectionReport.compare_with_yesterday && inspectionReport.compare_with_yesterday.delta">
+                                <span class="metric-label">Firing Alerts 变化</span>
+                                <span style="font-weight:700;">{{ inspectionReport.compare_with_yesterday.delta.firing_alerts }}</span>
+                            </div>
+                        </div>
+                        <div v-if="inspectionReport.forecast_7_15_30 && inspectionReport.forecast_7_15_30.predictions" style="margin-top: 10px;">
+                            <div class="metric-item" style="max-width:520px;">
+                                <span class="metric-label">未来 7 天风险分预测</span>
+                                <span style="font-weight:700;">{{ inspectionReport.forecast_7_15_30.predictions['7d'].risk_score }}</span>
+                            </div>
+                            <div class="metric-item" style="max-width:520px;">
+                                <span class="metric-label">未来 15 天风险分预测</span>
+                                <span style="font-weight:700;">{{ inspectionReport.forecast_7_15_30.predictions['15d'].risk_score }}</span>
+                            </div>
+                            <div class="metric-item" style="max-width:520px;">
+                                <span class="metric-label">未来 30 天风险分预测</span>
+                                <span style="font-weight:700;">{{ inspectionReport.forecast_7_15_30.predictions['30d'].risk_score }}</span>
+                            </div>
+                        </div>
+                        <div v-else style="color:#909399;">暂无历史数据，预测将从累积日报后生效</div>
+                    </el-card>
+
+                    <!-- AI Analysis -->
+                    <el-card style="margin-bottom: 20px;">
+                        <template #header>
+                            <div class="card-header">
+                                <span style="font-weight: bold; display:flex; align-items:center;">
+                                    <el-icon style="margin-right:8px; color:#409EFF"><ChatLineSquare /></el-icon>
+                                    Inspection analysis
+                                </span>
+                            </div>
+                        </template>
+                        <div style="white-space: pre-wrap; line-height: 1.6; font-size: 14px; color: #303133;">{{ inspectionReport.ai_analysis }}</div>
+                    </el-card>
+
+                    <!-- Key Metrics Table -->
+                    <el-card style="margin-bottom: 20px;">
+                        <template #header><div class="card-header"><span>Key Metrics Details</span></div></template>
+                        <el-table :data="inspectionReport.metrics_summary" style="width: 100%" max-height="520">
+                            <el-table-column prop="category" label="Category" width="120"></el-table-column>
+                            <el-table-column prop="display" label="Metric" min-width="160"></el-table-column>
+                            <el-table-column label="Labels" min-width="180" show-overflow-tooltip>
+                                <template #default="scope">
+                                    <span>{{ formatMetricLabels(scope.row.labels) }}</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="value" label="Value" width="120">
+                                <template #default="scope">
+                                    <span style="font-weight: 700;">{{ scope.row.value }}</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="unit" label="Unit" width="80"></el-table-column>
+                            <el-table-column prop="level" label="Level" width="110">
+                                <template #default="scope">
+                                    <el-tag :type="getMetricLevelType(scope.row.level)">{{ scope.row.level }}</el-tag>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="status" label="Status" width="110">
+                                <template #default="scope">
+                                    <el-tag :type="getMetricStatusType(scope.row.status)">{{ scope.row.status }}</el-tag>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="query" label="PromQL" min-width="220" show-overflow-tooltip></el-table-column>
+                        </el-table>
+                    </el-card>
+
+                    <!-- Details Tables -->
+                    <el-row :gutter="20">
+                        <el-col :span="12">
+                            <el-card>
+                                <template #header><div class="card-header"><span>Down Targets ({{ inspectionReport.down_targets.length }})</span></div></template>
+                                <el-table :data="inspectionReport.down_targets" style="width: 100%" max-height="300">
+                                    <el-table-column prop="job" label="Job"></el-table-column>
+                                    <el-table-column prop="instance" label="Instance"></el-table-column>
+                                    <el-table-column prop="last_error" label="Error"></el-table-column>
+                                </el-table>
+                            </el-card>
+                        </el-col>
+                        <el-col :span="12">
+                            <el-card>
+                                <template #header><div class="card-header"><span>Firing Alerts ({{ inspectionReport.firing_alerts.length }})</span></div></template>
+                                <el-table :data="inspectionReport.firing_alerts" style="width: 100%" max-height="300">
+                                    <el-table-column prop="name" label="Alert"></el-table-column>
+                                    <el-table-column prop="severity" label="Severity" width="100">
+                                        <template #default="scope">
+                                            <el-tag :type="scope.row.severity === 'critical' ? 'danger' : 'warning'">{{ scope.row.severity }}</el-tag>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="summary" label="Summary"></el-table-column>
+                                </el-table>
+                            </el-card>
+                        </el-col>
+                    </el-row>
+                </div>
+                <div v-else-if="!inspectionLoading" style="text-align: center; color: #909399; margin-top: 50px;">
+                    <el-empty description="Click 'Run Inspection' to start analysis"></el-empty>
+                </div>
+            </div>
+
+            <el-dialog v-model="inspectionConfigVisible" title="config" width="700px">
+                <el-form :model="inspectionConfig" label-width="140px">
+                    <el-form-item label="Prometheus 地址">
+                        <el-input v-model="inspectionConfig.prometheus_url" placeholder="https://prometheus.example.com"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Ark 基础地址">
+                        <el-input v-model="inspectionConfig.ark_base_url" placeholder="https://ark.cn-beijing.volces.com/api/v3"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Ark API 密钥">
+                        <el-input v-model="inspectionConfig.ark_api_key" type="password" show-password placeholder="Your API Key"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Ark 模型 ID">
+                        <el-input v-model="inspectionConfig.ark_model_id" placeholder="doubao-seed-1-6-251015"></el-input>
+                    </el-form-item>
+                </el-form>
+                <template #footer>
+                    <el-button @click="inspectionConfigVisible = false">关闭</el-button>
+                </template>
+            </el-dialog>
+
+            <el-dialog v-model="weeklyReportVisible" title="周报" width="720px" destroy-on-close>
+                <div v-if="weeklyReportData && weeklyReportData.items">
+                    <el-table :data="weeklyReportData.items" style="width: 100%" max-height="520">
+                        <el-table-column prop="id" label="Date" width="140"></el-table-column>
+                        <el-table-column prop="risk_score" label="Risk Score"></el-table-column>
+                    </el-table>
+                </div>
+                <div v-else style="color:#909399;">暂无周报数据</div>
+            </el-dialog>
+
+            <el-dialog v-model="monthlyReportVisible" title="月报" width="720px" destroy-on-close>
+                <div v-if="monthlyReportData && monthlyReportData.items">
+                    <el-table :data="monthlyReportData.items" style="width: 100%" max-height="520">
+                        <el-table-column prop="id" label="Date" width="140"></el-table-column>
+                        <el-table-column prop="risk_score" label="Risk Score"></el-table-column>
+                    </el-table>
+                </div>
+                <div v-else style="color:#909399;">暂无月报数据</div>
+            </el-dialog>
+
+        </el-main>
 
             <!-- CREATE TASK DIALOG -->
         <el-dialog v-model="createVisible" title="Create Sync Task" width="900px" destroy-on-close>
@@ -860,10 +1086,10 @@
     <script>
         const { createApp, ref, reactive, onMounted, computed, watch, nextTick } = Vue;
         const { ElMessage, ElMessageBox } = ElementPlus;
-        const { Odometer, List, Connection, Plus, Delete, Right, Edit, Download } = ElementPlusIconsVue;
+        const { Odometer, List, Connection, Plus, Delete, Right, Edit, Download, Setting, VideoPlay, Aim, Bell, ChatLineSquare, Histogram, Refresh, SwitchButton } = ElementPlusIconsVue;
 
                 const app = createApp({
-                    components: { Odometer, List, Connection, Plus, Delete, Right, Edit, Download },
+                    components: { Odometer, List, Connection, Plus, Delete, Right, Edit, Download, Setting, VideoPlay, Aim, Bell, ChatLineSquare, Histogram, Refresh, SwitchButton },
                     setup() {
                         const currentView = ref('dashboard');
                         const tasks = ref([]);
@@ -892,6 +1118,22 @@
 
                 // Monitor
                 const monitorStatus = ref({ status: 'unknown', last_run: '', alerts_sent: 0, last_error: '' });
+                const inspectionReport = ref(null);
+                const inspectionLoading = ref(false);
+                const inspectionConfigVisible = ref(false);
+                const inspectionConfig = ref({
+                    prometheus_url: 'https://prometheus.test.exc888.org',
+                    ark_api_key: '7a15ca7d-a3ec-4818-a0f4-0046cd1bcd49',
+                    ark_model_id: 'doubao-seed-1-6-251015',
+                    ark_base_url: 'https://ark.cn-beijing.volces.com/api/v3'
+                });
+                const inspectionHistoryList = ref([]);
+                const inspectionHistorySelected = ref('');
+                const inspectionHistoryLoading = ref(false);
+                const weeklyReportVisible = ref(false);
+                const weeklyReportData = ref(null);
+                const monthlyReportVisible = ref(false);
+                const monthlyReportData = ref(null);
                 const monitorConfig = ref({ 
                     enabled: false, 
                     es_hosts: '', 
@@ -1044,6 +1286,9 @@
                     if (index === 'monitor') {
                         fetchMonitorStatus();
                         fetchMonitorConfig();
+                    }
+                    if (index === 'inspection') {
+                        fetchInspectionHistory();
                     }
                 };
 
@@ -1796,6 +2041,262 @@
                     finally { monitorActionLoading.value = false; }
                 };
 
+                const runInspection = async () => {
+                    inspectionLoading.value = true;
+                    try {
+                        const res = await fetch('/inspection/run', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(inspectionConfig.value)
+                        });
+                        if (res.ok) {
+                            inspectionReport.value = await res.json();
+                            ElMessage.success('Inspection completed');
+                            await nextTick();
+                            _renderInspectionCharts();
+                            fetchInspectionHistory();
+                        } else {
+                            let err = {};
+                            try { err = await res.json(); } catch(_) {}
+                            ElMessage.error('Inspection failed: ' + (err.detail ? JSON.stringify(err.detail) : res.statusText));
+                        }
+                    } catch (e) { ElMessage.error(e.message); }
+                    finally { inspectionLoading.value = false; }
+                };
+
+                const fetchInspectionHistory = async () => {
+                    inspectionHistoryLoading.value = true;
+                    try {
+                        const res = await fetch('/inspection/reports?kind=daily&limit=30');
+                        if (!res.ok) throw new Error('获取历史列表失败');
+                        const data = await res.json();
+                        inspectionHistoryList.value = data.items || [];
+                    } catch (e) {
+                        ElMessage.error(e.message);
+                    } finally {
+                        inspectionHistoryLoading.value = false;
+                    }
+                };
+
+                const loadInspectionReport = async () => {
+                    if (!inspectionHistorySelected.value) return;
+                    inspectionLoading.value = true;
+                    try {
+                        const res = await fetch('/inspection/reports/' + encodeURIComponent(inspectionHistorySelected.value) + '?kind=daily');
+                        if (!res.ok) throw new Error('加载历史日报失败');
+                        inspectionReport.value = await res.json();
+                        await nextTick();
+                        _renderInspectionCharts();
+                    } catch (e) {
+                        ElMessage.error(e.message);
+                    } finally {
+                        inspectionLoading.value = false;
+                    }
+                };
+
+                const openWeeklyReport = async () => {
+                    if (!inspectionReport.value || !inspectionReport.value.weekly_report_id) return;
+                    try {
+                        const res = await fetch('/inspection/reports/' + encodeURIComponent(inspectionReport.value.weekly_report_id) + '?kind=weekly');
+                        if (!res.ok) throw new Error('加载周报失败');
+                        weeklyReportData.value = await res.json();
+                        weeklyReportVisible.value = true;
+                    } catch (e) {
+                        ElMessage.error(e.message);
+                    }
+                };
+
+                const openMonthlyReport = async () => {
+                    if (!inspectionReport.value || !inspectionReport.value.monthly_report_id) return;
+                    try {
+                        const res = await fetch('/inspection/reports/' + encodeURIComponent(inspectionReport.value.monthly_report_id) + '?kind=monthly');
+                        if (!res.ok) throw new Error('加载月报失败');
+                        monthlyReportData.value = await res.json();
+                        monthlyReportVisible.value = true;
+                    } catch (e) {
+                        ElMessage.error(e.message);
+                    }
+                };
+
+                const formatMetricLabels = (labels) => {
+                    if (!labels) return '';
+                    const keys = Object.keys(labels);
+                    if (keys.length === 0) return '';
+                    return keys.map(k => `${k}=${labels[k]}`).join(', ');
+                };
+
+                const getMetricLevelType = (level) => {
+                    if (level === 'critical') return 'danger';
+                    if (level === 'warning') return 'warning';
+                    if (level === 'ok') return 'success';
+                    return 'info';
+                };
+
+                const getMetricStatusType = (status) => {
+                    if (status === 'success') return 'success';
+                    if (status === 'no_data') return 'info';
+                    if (status === 'error') return 'danger';
+                    return 'warning';
+                };
+
+                const _renderInspectionCharts = (attempt = 0) => {
+                    if (!inspectionReport.value) return;
+                    if (!window.echarts || !window.echarts.version) {
+                        if (attempt === 0) ElMessage.error('ECharts 未正确加载，无法渲染图表');
+                        return;
+                    }
+
+                    const warnOnce = (msg) => {
+                        if (attempt === 0) ElMessage.warning(msg);
+                    };
+
+                    const initChartById = (id) => {
+                        const el = document.getElementById(id);
+                        if (!el) return null;
+                        if (el.clientWidth === 0 || el.clientHeight === 0) return { __retry: true };
+                        const prev = echarts.getInstanceByDom(el);
+                        if (prev) prev.dispose();
+                        return echarts.init(el);
+                    };
+
+                    const renderNoData = (chart, text = '暂无数据') => {
+                        chart.setOption({
+                            xAxis: { show: false },
+                            yAxis: { show: false },
+                            series: [],
+                            graphic: {
+                                type: 'text',
+                                left: 'center',
+                                top: 'middle',
+                                style: { text, fill: '#909399', fontSize: 14 }
+                            }
+                        });
+                        requestAnimationFrame(() => chart.resize());
+                    };
+
+                    let needsRetry = false;
+
+                    try {
+                        const downByJob = {};
+                        (inspectionReport.value.down_targets || []).forEach(t => {
+                            const k = t && t.job ? t.job : 'unknown';
+                            downByJob[k] = (downByJob[k] || 0) + 1;
+                        });
+                        const tChart = initChartById('inspTargetsChart');
+                        if (tChart && tChart.__retry) {
+                            needsRetry = true;
+                        } else if (tChart) {
+                            tChart.setOption({
+                                tooltip: { trigger: 'item' },
+                                legend: { bottom: '5%', left: 'center' },
+                                series: [{
+                                    name: 'Down Targets',
+                                    type: 'pie',
+                                    radius: ['40%', '70%'],
+                                    avoidLabelOverlap: false,
+                                    itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
+                                    label: { show: false, position: 'center' },
+                                    emphasis: { label: { show: true, fontSize: 20, fontWeight: 'bold' } },
+                                    data: Object.keys(downByJob).length > 0
+                                        ? Object.keys(downByJob).map(k => ({ value: downByJob[k], name: k }))
+                                        : [{ value: 1, name: 'All Good', itemStyle: { color: '#67C23A' } }]
+                                }]
+                            });
+                            requestAnimationFrame(() => tChart.resize());
+                        }
+                    } catch (e) {
+                        console.error('Render Targets Chart error:', e);
+                        warnOnce('部分图表渲染失败（Targets）');
+                    }
+
+                    try {
+                        const alerts = inspectionReport.value.firing_alerts || [];
+                        const severityMap = {};
+                        alerts.forEach(a => {
+                            const k = a && a.severity ? a.severity : 'unknown';
+                            severityMap[k] = (severityMap[k] || 0) + 1;
+                        });
+                        const aChart = initChartById('inspAlertsChart');
+                        if (aChart && aChart.__retry) {
+                            needsRetry = true;
+                        } else if (aChart) {
+                            aChart.setOption({
+                                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                                xAxis: { type: 'category', data: Object.keys(severityMap).length > 0 ? Object.keys(severityMap) : ['No Alerts'] },
+                                yAxis: { type: 'value' },
+                                series: [{
+                                    data: Object.keys(severityMap).length > 0
+                                        ? Object.values(severityMap).map((v, i) => ({
+                                            value: v,
+                                            itemStyle: { color: Object.keys(severityMap)[i] === 'critical' ? '#F56C6C' : '#E6A23C' }
+                                        }))
+                                        : [{ value: 0, itemStyle: { color: '#67C23A' } }],
+                                    type: 'bar'
+                                }]
+                            });
+                            requestAnimationFrame(() => aChart.resize());
+                        }
+                    } catch (e) {
+                        console.error('Render Alerts Chart error:', e);
+                        warnOnce('部分图表渲染失败（Alerts）');
+                    }
+
+                    try {
+                        const metrics = (inspectionReport.value.metrics_summary || []).filter(m => m && m.status === 'success');
+                        const renderTopBar = (elId, title, metricName, unit, color) => {
+                            const chart = initChartById(elId);
+                            if (!chart) return;
+                            if (chart.__retry) {
+                                needsRetry = true;
+                                return;
+                            }
+                            const rows = metrics
+                                .filter(m => m.name === metricName)
+                                .map(m => {
+                                    const label = (m.labels && (m.labels.instance || m.labels.node || m.labels.pod)) || formatMetricLabels(m.labels) || metricName;
+                                    const v = Number(m.value);
+                                    return { label, value: Number.isFinite(v) ? v : null };
+                                })
+                                .filter(x => x.value !== null)
+                                .sort((a, b) => b.value - a.value)
+                                .slice(0, 5)
+                                .reverse();
+
+                            if (rows.length === 0) {
+                                renderNoData(chart);
+                                return;
+                            }
+
+                            chart.setOption({
+                                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                                xAxis: { type: 'value' },
+                                yAxis: { type: 'category', data: rows.map(r => r.label) },
+                                series: [{
+                                    name: title,
+                                    type: 'bar',
+                                    data: rows.map(r => r.value),
+                                    itemStyle: { color: color || '#409EFF' },
+                                    label: { show: true, position: 'right', formatter: (p) => unit ? `${p.value}${unit}` : `${p.value}` }
+                                }]
+                            });
+                            requestAnimationFrame(() => chart.resize());
+                        };
+
+                        renderTopBar('inspCpuTopChart', 'CPU', 'cpu_usage_top5', '%', '#409EFF');
+                        renderTopBar('inspMemTopChart', 'Memory', 'mem_usage_top5', '%', '#E6A23C');
+                        renderTopBar('inspDiskTopChart', 'Disk', 'rootfs_usage_top5', '%', '#67C23A');
+                    } catch (e) {
+                        console.error('Render Metrics Charts error:', e);
+                        warnOnce('部分图表渲染失败（Metrics）');
+                    }
+
+                    if (needsRetry && attempt < 6) {
+                        setTimeout(() => _renderInspectionCharts(attempt + 1), 120);
+                    }
+                };
+
                 const saveMonitorConfig = async () => {
                     if (!monitorConfig.value.slack_webhook_url) {
                         ElMessage.error('Slack Webhook URL 不能为空，请重新输入');
@@ -1967,7 +2468,13 @@
                     createTask, getStatusType, formatTime,
                     // monitor
                     monitorStatus, monitorConfig, monitorActionLoading, monitorSaving,
-                    startMonitor, stopMonitor, saveMonitorConfig
+                    startMonitor, stopMonitor, saveMonitorConfig,
+                    inspectionReport, inspectionLoading, runInspection, inspectionConfigVisible, inspectionConfig,
+                    inspectionHistoryList, inspectionHistorySelected, inspectionHistoryLoading,
+                    fetchInspectionHistory, loadInspectionReport,
+                    weeklyReportVisible, weeklyReportData, openWeeklyReport,
+                    monthlyReportVisible, monthlyReportData, openMonthlyReport,
+                    formatMetricLabels, getMetricLevelType, getMetricStatusType
                 };
             }
         });

@@ -1,0 +1,752 @@
+{
+  "daaf7c6daa08475212f2f2bc08e89a051e15558a": {
+    "count": 1,
+    "first_seen": "2026-01-09T00:16:15.913Z",
+    "last_seen": "2026-01-09T00:16:15.913Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-market",
+    "pod": "exchange-market-5ff79cbfbc-m4xb7",
+    "sample": "获取 coin info error, coin:HI\n\ncom.qt.exchange.framework.common.exception.ServiceException: coin.not.exists\n\tat com.qt.exchange.framework.common.exception.util.ServiceExceptionUtil.exception0(ServiceExceptionUtil.java:33)\n\tat com.qt.exchange.framework.common.exception.util.ServiceExceptionUtil.exception(ServiceExceptionUtil.java:23)\n\tat com.qt.exchange.market.service.coin.CoinInfoHandler.handle(CoinInfoHandler.java:33)\n\tat com.qt.exchange.market.service.coin.CoinInfoHandler.handle(CoinInfoHandler.java:28)\n\tat com.qt.exchange.market.service.coin.CoinServiceImpl.refreshCoinInfo(CoinServiceImpl.java:40)\n\tat com.qt.exchange.market.job.CoinInfoTask.refreshCoinInfoTask(CoinInfoTask.java:20)\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:566)\n\tat com.xxl.job.core.handler.impl.MethodJobHandler.execute(MethodJobHandler.java:31)\n\tat com.xxl.job.core.thread.JobThread.run(JobThread.java:166)",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "f25f2293259a4d6d763430560669cd9e7a2da08c": {
+    "count": 1,
+    "first_seen": "2026-01-09T00:47:07.987284488Z",
+    "last_seen": "2026-01-09T00:47:07.987284488Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-75d7549cf5-b8rtm",
+    "sample": "2026-01-09 00:47:05.953 | ERROR 1 | defaultEventExecutorGroup-5-1 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | check token: 401,访问令牌已过期",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "c4aa0216d2a39cd3294b978d1f918933091f1ee8": {
+    "count": 1,
+    "first_seen": "2026-01-09T01:18:36.282663189Z",
+    "last_seen": "2026-01-09T01:18:36.282663189Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-75d7549cf5-b8rtm",
+    "sample": "2026-01-09 01:18:36.249 | ERROR 1 | defaultEventExecutorGroup-5-2 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | check token: 401,访问令牌不存在",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "d8a3fc8bd3d424ce4afa4cde9f93f2589c21fbf7": {
+    "count": 1,
+    "first_seen": "2026-01-09T01:18:37.987408362Z",
+    "last_seen": "2026-01-09T01:18:37.987408362Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-75d7549cf5-b8rtm",
+    "sample": "2026-01-09 01:18:36.249 | ERROR 1 | defaultEventExecutorGroup-5-1 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | check token: 401,访问令牌不存在",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "86bf535c8a05334ed55870f9e9b5397736576b28": {
+    "count": 1,
+    "first_seen": "2026-01-09T01:26:36.101371141Z",
+    "last_seen": "2026-01-09T01:26:36.101371141Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-admin",
+    "pod": "exchange-admin-577dffb56c-vlr6q",
+    "sample": "172.20.184.208 - - [09/Jan/2026:01:26:35 +0000] \"GET /member/kyc/human/1700234724/f452_2uxQr8K7WUihzuCTFpuwfwyhpw7PLfCm52_jFA.jpg HTTP/1.1\" 200 3280 \"https://admin.test.exc888.org/member/member-valid\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36\" \"61.10.14.18, 192.168.12.130\"\n2026/01/09 01:26:35 [warn] 32#32: *28611 an upstream response is buffered to a temporary file /var/cache/nginx/proxy_temp/1/00/0000000001 while reading upstream, client: 172.20.87.211, server: _, request: \"GET /admin-api/infra/file/preview/kyc/human/1700234724/dpSUzWvkC3q6g9o_vNOjN9_w0R_Q6yCYSrKUo7bG8Z4.png HTTP/1.1\", upstream: \"http://10.68.162.108:18080/admin-api/infra/file/preview/kyc/human/1700234724/dpSUzWvkC3q6g9o_vNOjN9_w0R_Q6yCYSrKUo7bG8Z4.png\", host: \"admin.test.exc888.org\", referrer: \"https://admin.test.exc888.org/member/member-valid\"",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "141e051a36cd0c581ebb3ca7773ced477775e4e5": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:09:01.704Z",
+    "last_seen": "2026-01-09T02:09:01.704Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-uc",
+    "pod": "exchange-uc-79b5c65674-zp86c",
+    "sample": "A cookie header was received [Hm_lvt_a1ff8825baa73c3a78eb96aa40325abc=1766563082,1766623776;] that contained an invalid cookie. That cookie will be ignored.\n Note: further occurrences of this error will be logged at DEBUG level.",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "28b9e25942339a544a1be7968759a7d4986d32d8": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:13:01.685Z",
+    "last_seen": "2026-01-09T02:13:01.685Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-uc",
+    "pod": "exchange-uc-79b5c65674-2p8db",
+    "sample": "A cookie header was received [Hm_lvt_a1ff8825baa73c3a78eb96aa40325abc=1766563082,1766623776;] that contained an invalid cookie. That cookie will be ignored.\n Note: further occurrences of this error will be logged at DEBUG level.",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "82b753cc27e387c184c2a2244b33ac4db57aeaad": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:16:09.788Z",
+    "last_seen": "2026-01-09T02:16:09.788Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-order",
+    "pod": "exchange-order-87fd56587-9492l",
+    "sample": "[preHandle][开始请求 URL(/admin-api/order/settle-error-log/page) 参数({pageNo=1, pageSize=10, status=0})][version=]",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "b277f1a2e79da6895f788a7c6f005fff684a3660": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:16:09.796Z",
+    "last_seen": "2026-01-09T02:16:09.796Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-uc",
+    "pod": "exchange-uc-79b5c65674-2p8db",
+    "sample": "[preHandle][开始请求 URL(/rpc-api/system/permission/has-any-permissions) 参数({permissions=order:settle-error-log:query, userId=1})][version=]",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "773e4a43b769075587851caa5f213c072268905d": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:16:09.802Z",
+    "last_seen": "2026-01-09T02:16:09.802Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-uc",
+    "pod": "exchange-uc-79b5c65674-2p8db",
+    "sample": "==> Parameters: order:settle-error-log:query(String)",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "ff0e4a2ff8015f234cdc2afae65bd6f175695fbb": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:16:09.823Z",
+    "last_seen": "2026-01-09T02:16:09.823Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-order",
+    "pod": "exchange-order-87fd56587-9492l",
+    "sample": "[afterCompletion][完成请求 URL(/admin-api/order/settle-error-log/page) 耗时(35 ms)]",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "5288d44c19e4ea742db296ebcb336fa6bf35993e": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:16:09.823Z",
+    "last_seen": "2026-01-09T02:16:09.823Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-order",
+    "pod": "exchange-order-87fd56587-9492l",
+    "sample": "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 【请求开始: /admin-api/order/settle-error-log/page】 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 【请求结束: /admin-api/order/settle-error-log/page】 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@】",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "faea1e661782d5cf9e78298261fee014c5e4d69f": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:16:11.941249715Z",
+    "last_seen": "2026-01-09T02:16:11.941249715Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-admin",
+    "pod": "exchange-admin-577dffb56c-rnx5t",
+    "sample": "172.20.87.211 - - [09/Jan/2026:02:16:09 +0000] \"GET /admin-api/order/settle-error-log/page?pageNo=1&pageSize=10&status=0 HTTP/1.1\" 200 15001 \"https://admin.test.exc888.org/spot/settle-error-log\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36\" \"61.10.14.18, 172.20.184.192\"",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "d81c65e7cae974ce696c4e92261de37b623a3a49": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:16:18.090Z",
+    "last_seen": "2026-01-09T02:16:18.090Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-order",
+    "pod": "exchange-order-87fd56587-4fv56",
+    "sample": "[preHandle][开始请求 URL(/admin-api/order/settle-error-log/1843769) 无参数][version=]",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "12b92ff5a719f541f4191ad9f40cfaac11e749b4": {
+    "count": 2,
+    "first_seen": "2026-01-09T02:16:18.093Z",
+    "last_seen": "2026-01-09T02:16:31.498Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-uc",
+    "pod": "exchange-uc-79b5c65674-2p8db",
+    "sample": "[preHandle][开始请求 URL(/rpc-api/system/permission/has-any-permissions) 参数({permissions=order:settle-error-log:query-log, userId=1})][version=]",
+    "history": [
+      1767916584,
+      1767916584
+    ],
+    "last_alert_ts": 1767916584
+  },
+  "d11803c822031c7bcd17fcb5bf9e07fc7d9c8c0d": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:16:18.099Z",
+    "last_seen": "2026-01-09T02:16:18.099Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-uc",
+    "pod": "exchange-uc-79b5c65674-2p8db",
+    "sample": "==> Parameters: order:settle-error-log:query-log(String)",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "5040266cf64c97bdbdcf2009190c972718a690f8": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:16:22.527Z",
+    "last_seen": "2026-01-09T02:16:22.527Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-order",
+    "pod": "exchange-order-87fd56587-4fv56",
+    "sample": "[afterCompletion][完成请求 URL(/admin-api/order/settle-error-log/1843769) 耗时(4437 ms)]",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "a4f1df8d3dd17933e5cf91dafa8c91a1289037dd": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:16:22.528Z",
+    "last_seen": "2026-01-09T02:16:22.528Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-order",
+    "pod": "exchange-order-87fd56587-4fv56",
+    "sample": "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 【请求开始: /admin-api/order/settle-error-log/1843769】 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n【MeCancelResultPayload】: {\"orderId\":33005264752641,\"accountId\":1700187256,\"delegateType\":1,\"symbol\":\"SOL/USDT\",\"baseTokenCode\":\"SOL\",\"quoteTokenCode\":\"USDT\",\"remainingQuantity\":4.48984,\"remainingAmount\":618.65505360000000000000000}\norderSpotTransactionLogReqDTO: {\"accountId\":1700187256,\"orderId\":33005264752641,\"tradeType\":null,\"marketMakerType\":\"K_LINE_MARKET\"}\norderSpotFreezeLogReqDTO: {\"accountId\":1700187256,\"orderId\":33005264752641,\"tradeType\":null,\"marketMakerType\":\"K_LINE_MARKET\"}\norderId: 33005264752641\norderSpotAssetLedgerReqDTO: {\"accountId\":1700187256,\"orderId\":33005264752641,\"createTime\":1767892504000,\"marketMakerType\":\"K_LINE_MARKET\"}\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 【请求结束: /admin-api/order/settle-error-log/1843769】 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@】",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "7fb78bcc7c350e948086cffd41c45994646a4fb2": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:16:24.987912233Z",
+    "last_seen": "2026-01-09T02:16:24.987912233Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-admin",
+    "pod": "exchange-admin-577dffb56c-vlr6q",
+    "sample": "172.20.87.211 - - [09/Jan/2026:02:16:22 +0000] \"GET /admin-api/order/settle-error-log/1843769 HTTP/1.1\" 200 2682 \"https://admin.test.exc888.org/spot/settle-error-log\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36\" \"61.10.14.18, 172.20.184.192\"",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "dc849b3efc38db08588834ea86fc794cd0783d74": {
+    "count": 2,
+    "first_seen": "2026-01-09T02:16:31.495Z",
+    "last_seen": "2026-01-09T02:17:18.142Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-order",
+    "pod": "exchange-order-87fd56587-9492l",
+    "sample": "[preHandle][开始请求 URL(/admin-api/order/settle-error-log/1843765) 无参数][version=]",
+    "history": [
+      1767916584,
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "d2cc132b48e09e788112edfd1fe179f3f17689a5": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:16:35.626Z",
+    "last_seen": "2026-01-09T02:16:35.626Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-order",
+    "pod": "exchange-order-87fd56587-9492l",
+    "sample": "[afterCompletion][完成请求 URL(/admin-api/order/settle-error-log/1843765) 耗时(4131 ms)]",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "18fe07780af6e175ec34e2c1ff5aad62e55df642": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:16:35.627Z",
+    "last_seen": "2026-01-09T02:16:35.627Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-order",
+    "pod": "exchange-order-87fd56587-9492l",
+    "sample": "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 【请求开始: /admin-api/order/settle-error-log/1843765】 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n【MeCancelResultPayload】: {\"orderId\":33005263353857,\"accountId\":1700187256,\"delegateType\":1,\"symbol\":\"SOL/USDT\",\"baseTokenCode\":\"SOL\",\"quoteTokenCode\":\"USDT\",\"remainingQuantity\":4.41722,\"remainingAmount\":608.64874380000000000000000}\norderSpotTransactionLogReqDTO: {\"accountId\":1700187256,\"orderId\":33005263353857,\"tradeType\":null,\"marketMakerType\":\"K_LINE_MARKET\"}\norderSpotFreezeLogReqDTO: {\"accountId\":1700187256,\"orderId\":33005263353857,\"tradeType\":null,\"marketMakerType\":\"K_LINE_MARKET\"}\norderId: 33005263353857\norderSpotAssetLedgerReqDTO: {\"accountId\":1700187256,\"orderId\":33005263353857,\"createTime\":1767892502000,\"marketMakerType\":\"K_LINE_MARKET\"}\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 【请求结束: /admin-api/order/settle-error-log/1843765】 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@】",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "fad4b442eff83caeabeebf31f14a3d3e4fe81da0": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:16:43.988214226Z",
+    "last_seen": "2026-01-09T02:16:43.988214226Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-admin",
+    "pod": "exchange-admin-577dffb56c-rnx5t",
+    "sample": "172.20.184.208 - - [09/Jan/2026:02:16:35 +0000] \"GET /admin-api/order/settle-error-log/1843765 HTTP/1.1\" 200 2690 \"https://admin.test.exc888.org/spot/settle-error-log\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36\" \"61.10.14.18, 192.168.12.130\"",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "846a6978a073ded87b0e3d13946adf7927eeb3cc": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:17:22.306Z",
+    "last_seen": "2026-01-09T02:17:22.306Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-order",
+    "pod": "exchange-order-87fd56587-9492l",
+    "sample": "[afterCompletion][完成请求 URL(/admin-api/order/settle-error-log/1843764) 耗时(4164 ms)]",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "1889374d20f5c81c013494689b8a5b8d1eafa9ac": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:17:22.306Z",
+    "last_seen": "2026-01-09T02:17:22.306Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-order",
+    "pod": "exchange-order-87fd56587-9492l",
+    "sample": "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 【请求开始: /admin-api/order/settle-error-log/1843764】 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n【MeCancelResultPayload】: {\"orderId\":33005262972929,\"accountId\":1700187256,\"delegateType\":1,\"symbol\":\"SOL/USDT\",\"baseTokenCode\":\"SOL\",\"quoteTokenCode\":\"USDT\",\"remainingQuantity\":4.72282,\"remainingAmount\":650.89905240000000000000000}\norderSpotTransactionLogReqDTO: {\"accountId\":1700187256,\"orderId\":33005262972929,\"tradeType\":null,\"marketMakerType\":\"K_LINE_MARKET\"}\norderSpotFreezeLogReqDTO: {\"accountId\":1700187256,\"orderId\":33005262972929,\"tradeType\":null,\"marketMakerType\":\"K_LINE_MARKET\"}\norderId: 33005262972929\norderSpotAssetLedgerReqDTO: {\"accountId\":1700187256,\"orderId\":33005262972929,\"createTime\":1767892502000,\"marketMakerType\":\"K_LINE_MARKET\"}\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 【请求结束: /admin-api/order/settle-error-log/1843764】 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@】",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 1767916584
+  },
+  "93ea939d49bcc6855286fbfa8e7aaaba859d542f": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:17:25.987970102Z",
+    "last_seen": "2026-01-09T02:17:25.987970102Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-admin",
+    "pod": "exchange-admin-577dffb56c-vlr6q",
+    "sample": "172.20.81.16 - - [09/Jan/2026:02:17:22 +0000] \"GET /admin-api/order/settle-error-log/1843764 HTTP/1.1\" 200 2684 \"https://admin.test.exc888.org/spot/settle-error-log\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36\" \"61.10.14.18, 172.20.184.192\"",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "f91bb2217418f12c3f21f23658f01656d8d5bf04": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:17:34.987572293Z",
+    "last_seen": "2026-01-09T02:17:34.987572293Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-admin",
+    "pod": "exchange-admin-577dffb56c-rnx5t",
+    "sample": "172.20.87.211 - - [09/Jan/2026:02:17:25 +0000] \"GET /admin-api/system/notify-message/get-unread-count HTTP/1.1\" 200 39 \"https://admin.test.exc888.org/spot/settle-error-log\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36\" \"61.10.14.18, 172.20.184.192\"",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "e762145e4da7658238d732cc5c01c5ee4725239a": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:18:14.107340631Z",
+    "last_seen": "2026-01-09T02:18:14.107340631Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-admin",
+    "pod": "exchange-admin-577dffb56c-vlr6q",
+    "sample": "172.20.184.208 - - [09/Jan/2026:02:18:07 +0000] \"GET /admin-api/system/auth/get-permission-info HTTP/1.1\" 200 46405 \"https://admin.test.exc888.org/spot/settle-error-log\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36\" \"61.10.14.18, 192.168.12.130\"",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "e85de8237983246b17f404a1f66372d6337aafd6": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:19:31.088Z",
+    "last_seen": "2026-01-09T02:19:31.088Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-75d7549cf5-b8rtm",
+    "sample": "pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-Za4Myr4dCjcPwPTHW4naJg (ws.s.mp.b89f4daa.queue); Consumer@24473f80: tags=[[amq.ctag-Za4Myr4dCjcPwPTHW4naJg]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,2), conn: Proxy@58e21dde Shared Rabbit Connection: SimpleConnection@7ac13392 [delegate=amqp://ws@192.168.12.61:5672/, localPort= 59344], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:19:31.121 |  WARN 1 | pool-3-thread-6 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-8sv4GtxZvF59gwoHNYWRdQ (ws.s.kline.b89f4daa.queue); Consumer@1d3bf23a: tags=[[amq.ctag-8sv4GtxZvF59gwoHNYWRdQ]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,3), conn: Proxy@58e21dde Shared Rabbit Connection: SimpleConnection@7ac13392 [delegate=amqp://ws@192.168.12.61:5672/, localPort= 59344], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:19:31.140 |  WARN 1 | pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-jAxXWiF-DvvKt6E4ayTmDQ (ws.s.handicap.b89f4daa.queue); Consumer@6bd02ccb: tags=[[amq.ctag-jAxXWiF-DvvKt6E4ayTmDQ]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,4), conn: Proxy@58e21dde Shared Rabbit Connection: SimpleConnection@7ac13392 [delegate=amqp://ws@192.168.12.61:5672/, localPort= 59344], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:19:31.155 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-_0skuekiyy6T0Zt-9IXAPg (ws.s.increase.b89f4daa.queue); Consumer@3ef54c8d: tags=[[amq.ctag-_0skuekiyy6T0Zt-9IXAPg]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,5), conn: Proxy@58e21dde Shared Rabbit Connection: SimpleConnection@7ac13392 [delegate=amqp://ws@192.1",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 1767916584
+  },
+  "d47aff966914ffbda9fbc291383f0e1cd5dd9674": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:20:11.842Z",
+    "last_seen": "2026-01-09T02:20:11.842Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-75d7549cf5-xv9tl",
+    "sample": "pool-3-thread-6 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-MYHZV0zQMW0lZKAnzxVeng (ws.s.order.4a4879ea.queue); Consumer@6252d1c: tags=[[amq.ctag-MYHZV0zQMW0lZKAnzxVeng]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,1), conn: Proxy@7eaa3a93 Shared Rabbit Connection: SimpleConnection@2dd72304 [delegate=amqp://ws@192.168.12.2:5672/, localPort= 40008], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:20:11.918 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-ZrfR2_aE4QUU0cM_qNxFcw (ws.s.mp.4a4879ea.queue); Consumer@24473f80: tags=[[amq.ctag-ZrfR2_aE4QUU0cM_qNxFcw]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,2), conn: Proxy@7eaa3a93 Shared Rabbit Connection: SimpleConnection@2dd72304 [delegate=amqp://ws@192.168.12.2:5672/, localPort= 40008], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:20:11.932 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-6zyHhQyQsl-nU7NorXcPEw (ws.s.kline.4a4879ea.queue); Consumer@1d3bf23a: tags=[[amq.ctag-6zyHhQyQsl-nU7NorXcPEw]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,3), conn: Proxy@7eaa3a93 Shared Rabbit Connection: SimpleConnection@2dd72304 [delegate=amqp://ws@192.168.12.2:5672/, localPort= 40008], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:20:11.935 |  WARN 1 | not.a.Spring.bean-1 [TID: N/A] o.s.a.r.l.SimpleMessageListenerContainer | Consumer raised exception, processing can restart if the connection factory supports it. Exception summary: org.springframework.amqp.rabbit.support.ConsumerCancelledException\n2026-01-09 02:20:11.935 |  INFO 1 | not.a.Spring.bean-1 [TID: N/A] o.s.a.r.l.SimpleMessageListenerContainer | Restarting Consumer@24473f80: tags=[[]], channel=Cached Rabbit Channel",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "c2d77161c95e917bf376d40895070aea03a7191c": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:20:12.217Z",
+    "last_seen": "2026-01-09T02:20:12.217Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-75d7549cf5-xv9tl",
+    "sample": "not.a.Spring.bean-1 [TID: N/A] o.s.a.r.l.SimpleMessageListenerContainer | Consumer raised exception, processing can restart if the connection factory supports it. Exception summary: org.springframework.amqp.rabbit.support.ConsumerCancelledException\n2026-01-09 02:20:12.229 |  INFO 1 | not.a.Spring.bean-1 [TID: N/A] o.s.a.r.l.SimpleMessageListenerContainer | Restarting Consumer@5887c3a9: tags=[[]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,7), conn: Proxy@7eaa3a93 Shared Rabbit Connection: null, acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:20:12.257 |  WARN 1 | not.a.Spring.bean-1 [TID: N/A] o.s.a.r.l.SimpleMessageListenerContainer | Consumer raised exception, processing can restart if the connection factory supports it. Exception summary: org.springframework.amqp.rabbit.support.ConsumerCancelledException\n2026-01-09 02:20:12.257 |  INFO 1 | not.a.Spring.bean-1 [TID: N/A] o.s.a.r.l.SimpleMessageListenerContainer | Restarting Consumer@3ef54c8d: tags=[[]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,5), conn: Proxy@7eaa3a93 Shared Rabbit Connection: null, acknowledgeMode=AUTO local queue size=0",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "694398578d475f781cece717f86661bd5c8a7efa": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:28:47.791Z",
+    "last_seen": "2026-01-09T02:28:47.791Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-59fb9d7fbb-cv8zd",
+    "sample": "pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-8uoCW6v1bm1gwIGZGQan2g (ws.s.mp.9aa68eee.queue); Consumer@514111ca: tags=[[amq.ctag-8uoCW6v1bm1gwIGZGQan2g]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,2), conn: Proxy@791fc5c3 Shared Rabbit Connection: SimpleConnection@f94fc29 [delegate=amqp://ws@192.168.12.61:5672/, localPort= 36564], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:28:47.822 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-iDTBOKoQTx2gtEZcOHZO_Q (ws.s.kline.9aa68eee.queue); Consumer@15485370: tags=[[amq.ctag-iDTBOKoQTx2gtEZcOHZO_Q]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,3), conn: Proxy@791fc5c3 Shared Rabbit Connection: SimpleConnection@f94fc29 [delegate=amqp://ws@192.168.12.61:5672/, localPort= 36564], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:28:47.834 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-TpxDyxLIqvF_VL4tH4XCMQ (ws.s.handicap.9aa68eee.queue); Consumer@5887c3a9: tags=[[amq.ctag-TpxDyxLIqvF_VL4tH4XCMQ]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,4), conn: Proxy@791fc5c3 Shared Rabbit Connection: SimpleConnection@f94fc29 [delegate=amqp://ws@192.168.12.61:5672/, localPort= 36564], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:28:47.844 |  WARN 1 | pool-3-thread-6 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-sLyCJaFlHKdBxmQni7XJfA (ws.s.increase.9aa68eee.queue); Consumer@733cb124: tags=[[amq.ctag-sLyCJaFlHKdBxmQni7XJfA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,5), conn: Proxy@791fc5c3 Shared Rabbit Connection: SimpleConnection@f94fc29 [delegate=amqp://ws@192.168.1",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "12c220d50cfe0fa6da287b0bf00c537f355dec48": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:28:50.987984089Z",
+    "last_seen": "2026-01-09T02:28:50.987984089Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-59fb9d7fbb-cv8zd",
+    "sample": "not.a.Spring.bean-2 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Queue declaration failed; retries left=3\n\norg.springframework.amqp.rabbit.listener.BlockingQueueConsumer$DeclarationException: Failed to declare queue(s):[ws.s.mp.9aa68eee.queue]\n\tat org.springframework.amqp.rabbit.listener.BlockingQueueConsumer.attemptPassiveDeclarations(BlockingQueueConsumer.java:760)\n\tat org.springframework.amqp.rabbit.listener.BlockingQueueConsumer.passiveDeclarations(BlockingQueueConsumer.java:637)\n\tat org.springframework.amqp.rabbit.listener.BlockingQueueConsumer.start(BlockingQueueConsumer.java:624)\n\tat org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$AsyncMessageProcessingConsumer.initialize(SimpleMessageListenerContainer.java:1382)\n\tat org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$AsyncMessageProcessingConsumer.run(SimpleMessageListenerContainer.java:1223)\n\tat java.base/java.lang.Thread.run(Thread.java:829)\nCaused by: java.io.IOException: null\n\tat com.rabbitmq.client.impl.AMQChannel.wrap(AMQChannel.java:132)\n\tat com.rabbitmq.client.impl.AMQChannel.wrap(AMQChannel.java:128)\n\tat com.rabbitmq.client.impl.AMQChannel.exnWrappingRpc(AMQChannel.java:150)\n\tat com.rabbitmq.client.impl.ChannelN.queueDeclarePassive(ChannelN.java:1012)\n\tat com.rabbitmq.client.impl.ChannelN.queueDeclarePassive(ChannelN.java:46)\n\tat org.springframework.amqp.rabbit.connection.PublisherCallbackChannelImpl.queueDeclarePassive(PublisherCallbackChannelImpl.java:358)\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:566)\n\tat org.springframework.amqp.rabbit.connection.CachingConnectionFactory$CachedChannelInvocationHandler.invoke(CachingConnectionFactory.java:11",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "46e739cc1ceacb40bfebcadbec8481854c847bd2": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:29:23.660Z",
+    "last_seen": "2026-01-09T02:29:23.660Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-59fb9d7fbb-l5z6h",
+    "sample": "pool-3-thread-6 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-gJjO2dvmKWdjxEPSXjViiw (ws.s.mp.e67468e2.queue); Consumer@60873af4: tags=[[amq.ctag-gJjO2dvmKWdjxEPSXjViiw]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,2), conn: Proxy@2b4ce8f3 Shared Rabbit Connection: SimpleConnection@51509c7d [delegate=amqp://ws@192.168.12.41:5672/, localPort= 34480], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:29:23.678 |  WARN 1 | pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-OoJUESVT5ikEXaOP50g5NQ (ws.s.kline.e67468e2.queue); Consumer@9d7522: tags=[[amq.ctag-OoJUESVT5ikEXaOP50g5NQ]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,3), conn: Proxy@2b4ce8f3 Shared Rabbit Connection: SimpleConnection@51509c7d [delegate=amqp://ws@192.168.12.41:5672/, localPort= 34480], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:29:23.692 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-henC8WJhz4kt9p65Q3-1NA (ws.s.handicap.e67468e2.queue); Consumer@29b8a9a9: tags=[[amq.ctag-henC8WJhz4kt9p65Q3-1NA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,4), conn: Proxy@2b4ce8f3 Shared Rabbit Connection: SimpleConnection@51509c7d [delegate=amqp://ws@192.168.12.41:5672/, localPort= 34480], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:29:23.715 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-GeC5V_UZ6ZogzkX_TO7Jpg (ws.s.increase.e67468e2.queue); Consumer@54a989ec: tags=[[amq.ctag-GeC5V_UZ6ZogzkX_TO7Jpg]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,5), conn: Proxy@2b4ce8f3 Shared Rabbit Connection: SimpleConnection@51509c7d [delegate=amqp://ws@192.168",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "4336c66e15d51231db65c74bda2fcff7507dc3d8": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:33:18.648Z",
+    "last_seen": "2026-01-09T02:33:18.648Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-6776db485b-fw9vw",
+    "sample": "defaultEventExecutorGroup-5-2 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: {\"action\":\"kline.list4Market\",\"meta\":{\"actionId\":\"pc-olpt7kl3oke\",\"lang\":\"zh-CN\"},\"payload\":{\"symbols\":[\"SUI/USDT\",\"TRX/USDT\",\"WOO/USDT\",\"PUMP/USDT\",\"PI/USDT\",\"TAO/USDT\",\"PEPE/USDT\",\"XRP/USDT\",\"ADA/USDT\",\"LINK/USDT\",\"BTC/USDT\",\"BNB/USDT\",\"ETH/USDT\",\"SOL/USDT\",\"USDC/USDT\",\"DOGE/USDT\"]}}\n2026-01-09 02:33:18.649 |  INFO 1 | defaultEventExecutorGroup-5-2 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: {\"action\":\"account.bind\",\"meta\":{\"token\":\"25c84111511f4587818ce0952eac6c5d\",\"actionId\":\"pc-27ufj8540eb-1700044744-symochen.work@gmail.com\",\"lang\":\"zh-CN\"}}\n2026-01-09 02:33:18.699 |  INFO 1 | defaultEventExecutorGroup-5-3 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: {\"action\":\"account.bind\",\"meta\":{\"token\":\"25c84111511f4587818ce0952eac6c5d\",\"actionId\":\"pc-e3abn9ov4cq-1700044744-symochen.work@gmail.com\",\"lang\":\"zh-CN\"}}\n2026-01-09 02:33:19.663 |  INFO 1 | defaultEventExecutorGroup-5-4 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: ping\n2026-01-09 02:33:20.211 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-O9uZz4IqvDvZWjPjVv__2w (ws.s.order.6138416d.queue); Consumer@6ac7e58e: tags=[[amq.ctag-O9uZz4IqvDvZWjPjVv__2w]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,1), conn: Proxy@51509c7d Shared Rabbit Connection: SimpleConnection@254b360d [delegate=amqp://ws@192.168.12.2:5672/, localPort= 58854], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:33:20.229 |  WARN 1 | pool-3-thread-6 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-3EgxrU6aRTP-J3fe_Y2wUA (ws.s.mp.6138416d.queue); Consumer@4016ec40: tags=[[amq.ctag-3EgxrU6aRTP-J3fe_Y2wUA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,2), conn: Proxy@51509c7d Shared Rabbit Connection",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "f3bd753f3991ed41231bf8b12b4ff3ec5a3186fb": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:33:59.511Z",
+    "last_seen": "2026-01-09T02:33:59.511Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-6776db485b-fvprn",
+    "sample": "defaultEventExecutorGroup-5-3 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: {\"action\":\"order-book.orderBookList\",\"meta\":{\"actionId\":\"12345\"},\"payload\":{\"priceStep\":0.01,\"size\":10,\"symbol\":\"SOL/USDT\"}}\n2026-01-09 02:33:59.841 |  INFO 1 | defaultEventExecutorGroup-5-3 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: ping\n2026-01-09 02:34:01.128 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-FPyOvdleVTyBCjnTF21OqA (ws.s.order.d454ab84.queue); Consumer@79c4580b: tags=[[amq.ctag-FPyOvdleVTyBCjnTF21OqA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,1), conn: Proxy@2c18cde7 Shared Rabbit Connection: SimpleConnection@48e6053c [delegate=amqp://ws@192.168.12.41:5672/, localPort= 48490], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:34:01.147 |  WARN 1 | pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-5l3yUtUwx3DtWJ8l4EJHog (ws.s.mp.d454ab84.queue); Consumer@511f3350: tags=[[amq.ctag-5l3yUtUwx3DtWJ8l4EJHog]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,2), conn: Proxy@2c18cde7 Shared Rabbit Connection: SimpleConnection@48e6053c [delegate=amqp://ws@192.168.12.41:5672/, localPort= 48490], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:34:01.161 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-FUmbUgbtNG8hlrArf-gCoQ (ws.s.kline.d454ab84.queue); Consumer@1ac81de1: tags=[[amq.ctag-FUmbUgbtNG8hlrArf-gCoQ]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,3), conn: Proxy@2c18cde7 Shared Rabbit Connection: SimpleConnection@48e6053c [delegate=amqp://ws@192.168.12.41:5672/, localPort= 48490], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:34:01.176 |  WARN 1 | pool-3-thread-6 [TID: N/A] o.s.a.r.l",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "5ffcf165564aef42e2dbc7ad2c40dadbb2059ad1": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:53:20.590Z",
+    "last_seen": "2026-01-09T02:53:20.590Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-5889459f8b-dlw8k",
+    "sample": "pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-ANGVcS4PpAalMK7FaD67zg (ws.s.mp.d358f152.queue); Consumer@1784be48: tags=[[amq.ctag-ANGVcS4PpAalMK7FaD67zg]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,2), conn: Proxy@7eaa3a93 Shared Rabbit Connection: SimpleConnection@2dd72304 [delegate=amqp://ws@192.168.12.2:5672/, localPort= 60834], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:53:20.627 |  WARN 1 | pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-wB3bSTdJwSaLr4f82pdNPA (ws.s.kline.d358f152.queue); Consumer@5914bf5f: tags=[[amq.ctag-wB3bSTdJwSaLr4f82pdNPA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,3), conn: Proxy@7eaa3a93 Shared Rabbit Connection: SimpleConnection@2dd72304 [delegate=amqp://ws@192.168.12.2:5672/, localPort= 60834], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:53:20.628 |  WARN 1 | not.a.Spring.bean-1 [TID: N/A] o.s.a.r.l.SimpleMessageListenerContainer | Consumer raised exception, processing can restart if the connection factory supports it. Exception summary: org.springframework.amqp.rabbit.support.ConsumerCancelledException\n2026-01-09 02:53:20.629 |  INFO 1 | not.a.Spring.bean-1 [TID: N/A] o.s.a.r.l.SimpleMessageListenerContainer | Restarting Consumer@5914bf5f: tags=[[]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,3), conn: Proxy@7eaa3a93 Shared Rabbit Connection: SimpleConnection@2dd72304 [delegate=amqp://ws@192.168.12.2:5672/, localPort= 60834], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:53:20.641 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-2RmyTR5dSSZZLuFNpYHrZw (ws.s.handicap.d358f152.queue); Consumer@4267edd9: tags=[[amq.ctag-2RmyTR5dSSZZLuFNpYHrZw]], channel=Cached Rabbit Cha",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "d6dabe5d3048fb978b24f12a2b03c3ed94aa2a0e": {
+    "count": 1,
+    "first_seen": "2026-01-09T02:53:55.457Z",
+    "last_seen": "2026-01-09T02:53:55.457Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-5889459f8b-gmhb5",
+    "sample": "defaultEventExecutorGroup-5-4 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | accountId: 1700086623\n2026-01-09 02:53:56.571 |  WARN 1 | pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-UE27S-W7qHhqyuqCz_G74g (ws.s.order.e1bd2bfb.queue); Consumer@501f3c79: tags=[[amq.ctag-UE27S-W7qHhqyuqCz_G74g]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,1), conn: Proxy@6a71e941 Shared Rabbit Connection: SimpleConnection@58e21dde [delegate=amqp://ws@192.168.12.41:5672/, localPort= 37798], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:53:56.575 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-cPOIm5mOxHSmqF-wDo1zcQ (ws.s.mp.e1bd2bfb.queue); Consumer@1d3bf23a: tags=[[amq.ctag-cPOIm5mOxHSmqF-wDo1zcQ]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,2), conn: Proxy@6a71e941 Shared Rabbit Connection: SimpleConnection@58e21dde [delegate=amqp://ws@192.168.12.41:5672/, localPort= 37798], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:53:56.589 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-_esPitVjgdQeklvirT_mUA (ws.s.kline.e1bd2bfb.queue); Consumer@6bd02ccb: tags=[[amq.ctag-_esPitVjgdQeklvirT_mUA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,3), conn: Proxy@6a71e941 Shared Rabbit Connection: SimpleConnection@58e21dde [delegate=amqp://ws@192.168.12.41:5672/, localPort= 37798], acknowledgeMode=AUTO local queue size=0\n2026-01-09 02:53:56.603 |  WARN 1 | pool-3-thread-6 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-8t1JWLpYl7npvltCZ8cUxg (ws.s.handicap.e1bd2bfb.queue); Consumer@3ef54c8d: tags=[[amq.ctag-8t1JWLpYl7npvltCZ8cUxg]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQC",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "3d31ee791c24bfe04cc5c7cb04bd43e61c7b9366": {
+    "count": 1,
+    "first_seen": "2026-01-09T03:37:06.550Z",
+    "last_seen": "2026-01-09T03:37:06.550Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-6d949c796-8hcbt",
+    "sample": "defaultEventExecutorGroup-5-3 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | accountId: 1700202983\n2026-01-09 03:37:07.416 |  WARN 1 | pool-3-thread-6 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-1ivQ3Lh6bV-362BskYT8ZA (ws.s.order.46b1d214.queue); Consumer@361fb3b3: tags=[[amq.ctag-1ivQ3Lh6bV-362BskYT8ZA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,1), conn: Proxy@40ea25b0 Shared Rabbit Connection: SimpleConnection@2eeb14d4 [delegate=amqp://ws@192.168.12.41:5672/, localPort= 47674], acknowledgeMode=AUTO local queue size=0\n2026-01-09 03:37:07.422 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-RGt1b-ayjrzzqmTHeN73mA (ws.s.mp.46b1d214.queue); Consumer@38308731: tags=[[amq.ctag-RGt1b-ayjrzzqmTHeN73mA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,2), conn: Proxy@40ea25b0 Shared Rabbit Connection: SimpleConnection@2eeb14d4 [delegate=amqp://ws@192.168.12.41:5672/, localPort= 47674], acknowledgeMode=AUTO local queue size=0\n2026-01-09 03:37:07.439 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-NGwwpS6Rv19lPlUYAvcWCA (ws.s.kline.46b1d214.queue); Consumer@493f14e7: tags=[[amq.ctag-NGwwpS6Rv19lPlUYAvcWCA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,3), conn: Proxy@40ea25b0 Shared Rabbit Connection: SimpleConnection@2eeb14d4 [delegate=amqp://ws@192.168.12.41:5672/, localPort= 47674], acknowledgeMode=AUTO local queue size=0\n2026-01-09 03:37:07.453 |  WARN 1 | pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-3riYV_PcX5ZoiMqPxS2FCA (ws.s.handicap.46b1d214.queue); Consumer@4cdedf52: tags=[[amq.ctag-3riYV_PcX5ZoiMqPxS2FCA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQC",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "51c0e1accd6f6cb819713966aa4f00d85c77087e": {
+    "count": 1,
+    "first_seen": "2026-01-09T03:37:43.180Z",
+    "last_seen": "2026-01-09T03:37:43.180Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-6d949c796-s9jkp",
+    "sample": "pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-nvKkdcS07s_BqLi4tChJgA (ws.s.mp.1acae6ea.queue); Consumer@1d3bf23a: tags=[[amq.ctag-nvKkdcS07s_BqLi4tChJgA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,2), conn: Proxy@6ef27af9 Shared Rabbit Connection: SimpleConnection@7eaa3a93 [delegate=amqp://ws@192.168.12.41:5672/, localPort= 56932], acknowledgeMode=AUTO local queue size=0\n2026-01-09 03:37:43.221 |  WARN 1 | pool-3-thread-6 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-UadxD2gjqe4G2qsOSyjkcQ (ws.s.kline.1acae6ea.queue); Consumer@6bd02ccb: tags=[[amq.ctag-UadxD2gjqe4G2qsOSyjkcQ]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,3), conn: Proxy@6ef27af9 Shared Rabbit Connection: SimpleConnection@7eaa3a93 [delegate=amqp://ws@192.168.12.41:5672/, localPort= 56932], acknowledgeMode=AUTO local queue size=0\n2026-01-09 03:37:43.243 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-oVArau3QIHtqyVBXkCY3nw (ws.s.handicap.1acae6ea.queue); Consumer@3ef54c8d: tags=[[amq.ctag-oVArau3QIHtqyVBXkCY3nw]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,4), conn: Proxy@6ef27af9 Shared Rabbit Connection: SimpleConnection@7eaa3a93 [delegate=amqp://ws@192.168.12.41:5672/, localPort= 56932], acknowledgeMode=AUTO local queue size=0\n2026-01-09 03:37:43.262 |  WARN 1 | pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-_FtyB2j_lQd6shC7kFdUWw (ws.s.increase.1acae6ea.queue); Consumer@4544bccb: tags=[[amq.ctag-_FtyB2j_lQd6shC7kFdUWw]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,5), conn: Proxy@6ef27af9 Shared Rabbit Connection: SimpleConnection@7eaa3a93 [delegate=amqp://ws@192.1",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "a9435906efa53c40b80c0d3a0897ab7693829368": {
+    "count": 1,
+    "first_seen": "2026-01-09T03:52:38.987699188Z",
+    "last_seen": "2026-01-09T03:52:38.987699188Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-7d768cf5c-kzgm8",
+    "sample": "2026-01-09 03:52:36.810 | ERROR 1 | defaultEventExecutorGroup-5-4 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | check token: 401,访问令牌已过期",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "c4bfb01f6c2d8edc3910ffeffe3c34b13ec0de3b": {
+    "count": 1,
+    "first_seen": "2026-01-09T03:56:31.086Z",
+    "last_seen": "2026-01-09T03:56:31.086Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-7d768cf5c-sg7wz",
+    "sample": "defaultEventExecutorGroup-5-1 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: {\"action\":\"order-book.orderBookList\",\"meta\":{\"actionId\":\"12345\"},\"payload\":{\"priceStep\":0.01,\"size\":10,\"symbol\":\"SOL/USDT\"}}\n2026-01-09 03:56:32.713 |  WARN 1 | pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-UZrmqoxh5BXs2j-FPVqvtg (ws.s.order.20b2a3c2.queue); Consumer@705a2022: tags=[[amq.ctag-UZrmqoxh5BXs2j-FPVqvtg]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,1), conn: Proxy@247d6992 Shared Rabbit Connection: SimpleConnection@2235153c [delegate=amqp://ws@192.168.12.2:5672/, localPort= 43624], acknowledgeMode=AUTO local queue size=0\n2026-01-09 03:56:32.736 |  WARN 1 | pool-3-thread-6 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-nNWbKSqXYSKhWIdlh444IA (ws.s.mp.20b2a3c2.queue); Consumer@29b8a9a9: tags=[[amq.ctag-nNWbKSqXYSKhWIdlh444IA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,2), conn: Proxy@247d6992 Shared Rabbit Connection: SimpleConnection@2235153c [delegate=amqp://ws@192.168.12.2:5672/, localPort= 43624], acknowledgeMode=AUTO local queue size=0\n2026-01-09 03:56:32.767 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-Uo8O4YtXs3f8ThqTpAzaLw (ws.s.kline.20b2a3c2.queue); Consumer@54a989ec: tags=[[amq.ctag-Uo8O4YtXs3f8ThqTpAzaLw]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,3), conn: Proxy@247d6992 Shared Rabbit Connection: SimpleConnection@2235153c [delegate=amqp://ws@192.168.12.2:5672/, localPort= 43624], acknowledgeMode=AUTO local queue size=0\n2026-01-09 03:56:32.785 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-9wwPmEY9Beu7Hjksad-i2w (ws.s.handicap.20b2a3c2.queue); Consumer@514111ca: ta",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "9a97ae872c6579fa149983ca1ece89e8fb473bdd": {
+    "count": 1,
+    "first_seen": "2026-01-09T03:57:12.386Z",
+    "last_seen": "2026-01-09T03:57:12.386Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-7d768cf5c-kzgm8",
+    "sample": "pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-CCvllr5TkeSaarMe8VIoCw (ws.s.order.3504740c.queue); Consumer@501f3c79: tags=[[amq.ctag-CCvllr5TkeSaarMe8VIoCw]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,1), conn: Proxy@6a71e941 Shared Rabbit Connection: SimpleConnection@58e21dde [delegate=amqp://ws@192.168.12.41:5672/, localPort= 45174], acknowledgeMode=AUTO local queue size=0\n2026-01-09 03:57:13.516 |  WARN 1 | pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-6_pgOi1U26TxlxKKJUw1ZA (ws.s.mp.3504740c.queue); Consumer@1d3bf23a: tags=[[amq.ctag-6_pgOi1U26TxlxKKJUw1ZA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,2), conn: Proxy@6a71e941 Shared Rabbit Connection: SimpleConnection@58e21dde [delegate=amqp://ws@192.168.12.41:5672/, localPort= 45174], acknowledgeMode=AUTO local queue size=0\n2026-01-09 03:57:13.528 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-0iYdEyENrvZ9UElJ9V8qDw (ws.s.kline.3504740c.queue); Consumer@6bd02ccb: tags=[[amq.ctag-0iYdEyENrvZ9UElJ9V8qDw]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,3), conn: Proxy@6a71e941 Shared Rabbit Connection: SimpleConnection@58e21dde [delegate=amqp://ws@192.168.12.41:5672/, localPort= 45174], acknowledgeMode=AUTO local queue size=0\n2026-01-09 03:57:13.542 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-iuKqYU9DOaoXXUBbmgP3gQ (ws.s.handicap.3504740c.queue); Consumer@3ef54c8d: tags=[[amq.ctag-iuKqYU9DOaoXXUBbmgP3gQ]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,4), conn: Proxy@6a71e941 Shared Rabbit Connection: SimpleConnection@58e21dde [delegate=amqp://ws@192.168.",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "5958ce61b2dad0d12b6cf3bd6daab947d4fb05b1": {
+    "count": 1,
+    "first_seen": "2026-01-09T05:20:53.464949337Z",
+    "last_seen": "2026-01-09T05:20:53.464949337Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-5b6f8fc4dd-s7pq2",
+    "sample": "2026-01-09 05:20:53.123 | ERROR 1 | defaultEventExecutorGroup-5-2 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | check token: 401,访问令牌不存在",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "5529332840d9edd2dd93fc00d86864fe03ae52be": {
+    "count": 1,
+    "first_seen": "2026-01-09T05:20:54.987952541Z",
+    "last_seen": "2026-01-09T05:20:54.987952541Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-5b6f8fc4dd-s7pq2",
+    "sample": "2026-01-09 05:20:53.128 | ERROR 1 | defaultEventExecutorGroup-5-1 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | check token: 401,访问令牌不存在",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "825b44017e7553357e3bf5dd3d5941c8ccc73857": {
+    "count": 1,
+    "first_seen": "2026-01-09T06:29:07.340Z",
+    "last_seen": "2026-01-09T06:29:07.340Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-5b6f8fc4dd-s7pq2",
+    "sample": "pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-jO4S_r5lEONVAxZe3HDacQ (ws.s.mp.14322b7c.queue); Consumer@60873af4: tags=[[amq.ctag-jO4S_r5lEONVAxZe3HDacQ]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,2), conn: Proxy@2b4ce8f3 Shared Rabbit Connection: SimpleConnection@51509c7d [delegate=amqp://ws@192.168.12.61:5672/, localPort= 41548], acknowledgeMode=AUTO local queue size=0\n2026-01-09 06:29:07.380 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-cZDxWxF9-Z1_v_ubanzpxw (ws.s.kline.14322b7c.queue); Consumer@9d7522: tags=[[amq.ctag-cZDxWxF9-Z1_v_ubanzpxw]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,3), conn: Proxy@2b4ce8f3 Shared Rabbit Connection: SimpleConnection@51509c7d [delegate=amqp://ws@192.168.12.61:5672/, localPort= 41548], acknowledgeMode=AUTO local queue size=0\n2026-01-09 06:29:07.404 |  WARN 1 | pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-shTKV1yvL8YkkHUW6NBM1w (ws.s.handicap.14322b7c.queue); Consumer@29b8a9a9: tags=[[amq.ctag-shTKV1yvL8YkkHUW6NBM1w]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,4), conn: Proxy@2b4ce8f3 Shared Rabbit Connection: SimpleConnection@51509c7d [delegate=amqp://ws@192.168.12.61:5672/, localPort= 41548], acknowledgeMode=AUTO local queue size=0\n2026-01-09 06:29:07.419 |  WARN 1 | pool-3-thread-6 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-sMBlDOrzwCUxTiUI6k425w (ws.s.increase.14322b7c.queue); Consumer@54a989ec: tags=[[amq.ctag-sMBlDOrzwCUxTiUI6k425w]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,5), conn: Proxy@2b4ce8f3 Shared Rabbit Connection: SimpleConnection@51509c7d [delegate=amqp://ws@192.168",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "67a460eea982d900bd17659fca1279ad19dab8d1": {
+    "count": 1,
+    "first_seen": "2026-01-09T06:29:46.006Z",
+    "last_seen": "2026-01-09T06:29:46.006Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-5b6f8fc4dd-wkpg6",
+    "sample": "defaultEventExecutorGroup-5-2 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: ping\n2026-01-09 06:29:47.047 |  INFO 1 | defaultEventExecutorGroup-5-3 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: ping\n2026-01-09 06:29:47.485 |  INFO 1 | defaultEventExecutorGroup-5-1 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: ping\n2026-01-09 06:29:48.138 |  WARN 1 | pool-3-thread-6 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-j-H6CHmcEI_MUxKX_wbe5g (ws.s.order.529faf55.queue); Consumer@50ba8e64: tags=[[amq.ctag-j-H6CHmcEI_MUxKX_wbe5g]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,1), conn: Proxy@3651c4cd Shared Rabbit Connection: SimpleConnection@53339642 [delegate=amqp://ws@192.168.12.41:5672/, localPort= 51410], acknowledgeMode=AUTO local queue size=0\n2026-01-09 06:29:48.147 |  WARN 1 | pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-khvMwvTR6xHwSZie8qh8Mw (ws.s.mp.529faf55.queue); Consumer@4544bccb: tags=[[amq.ctag-khvMwvTR6xHwSZie8qh8Mw]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,2), conn: Proxy@3651c4cd Shared Rabbit Connection: SimpleConnection@53339642 [delegate=amqp://ws@192.168.12.41:5672/, localPort= 51410], acknowledgeMode=AUTO local queue size=0\n2026-01-09 06:29:48.161 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-npT0nj3zlpX_BJc4O-62FQ (ws.s.kline.529faf55.queue); Consumer@750a0bfe: tags=[[amq.ctag-npT0nj3zlpX_BJc4O-62FQ]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.41:5672/,3), conn: Proxy@3651c4cd Shared Rabbit Connection: SimpleConnection@53339642 [delegate=amqp://ws@192.168.12.41:5672/, localPort= 51410], acknowledgeMode=AUTO local queue size=0\n2026-01-09 06:29:48.174 |  WARN 1 | pool-3-thread-5 [TID: N",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "1e6ed534eeca89055773868d4f88854d3c826dcd": {
+    "count": 1,
+    "first_seen": "2026-01-09T06:29:48.347Z",
+    "last_seen": "2026-01-09T06:29:48.347Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-5b6f8fc4dd-wkpg6",
+    "sample": "not.a.Spring.bean-2 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Failed to declare queue: ws.s.kline.529faf55.queue\n2026-01-09 06:29:48.353 |  WARN 1 | not.a.Spring.bean-2 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Queue declaration failed; retries left=3\n\norg.springframework.amqp.rabbit.listener.BlockingQueueConsumer$DeclarationException: Failed to declare queue(s):[ws.s.kline.529faf55.queue]\n\tat org.springframework.amqp.rabbit.listener.BlockingQueueConsumer.attemptPassiveDeclarations(BlockingQueueConsumer.java:760)\n\tat org.springframework.amqp.rabbit.listener.BlockingQueueConsumer.passiveDeclarations(BlockingQueueConsumer.java:637)\n\tat org.springframework.amqp.rabbit.listener.BlockingQueueConsumer.start(BlockingQueueConsumer.java:624)\n\tat org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$AsyncMessageProcessingConsumer.initialize(SimpleMessageListenerContainer.java:1382)\n\tat org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$AsyncMessageProcessingConsumer.run(SimpleMessageListenerContainer.java:1223)\n\tat java.base/java.lang.Thread.run(Thread.java:829)\nCaused by: java.io.IOException: null\n\tat com.rabbitmq.client.impl.AMQChannel.wrap(AMQChannel.java:132)\n\tat com.rabbitmq.client.impl.AMQChannel.wrap(AMQChannel.java:128)\n\tat com.rabbitmq.client.impl.AMQChannel.exnWrappingRpc(AMQChannel.java:150)\n\tat com.rabbitmq.client.impl.ChannelN.queueDeclarePassive(ChannelN.java:1012)\n\tat com.rabbitmq.client.impl.ChannelN.queueDeclarePassive(ChannelN.java:46)\n\tat org.springframework.amqp.rabbit.connection.PublisherCallbackChannelImpl.queueDeclarePassive(PublisherCallbackChannelImpl.java:358)\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.base/java.lang.reflect.Method.in",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "dae1fd4f707b8f09c5735d9b5ff89926534f7b9f": {
+    "count": 1,
+    "first_seen": "2026-01-09T06:38:48.324Z",
+    "last_seen": "2026-01-09T06:38:48.324Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-activity",
+    "pod": "exchange-activity-5bc4b7b654-d58nr",
+    "sample": "[handleBindException]\n\norg.springframework.validation.BindException: org.springframework.validation.BeanPropertyBindingResult: 3 errors\nField error in object 'activityAuditLogReqVO' on field 'auditStatus': rejected value [null]; codes [NotNull.activityAuditLogReqVO.auditStatus,NotNull.auditStatus,NotNull.java.lang.Integer,NotNull]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [activityAuditLogReqVO.auditStatus,auditStatus]; arguments []; default message [auditStatus]]; default message [审核结果不能为空]\nField error in object 'activityAuditLogReqVO' on field 'id': rejected value [null]; codes [NotNull.activityAuditLogReqVO.id,NotNull.id,NotNull.java.lang.Long,NotNull]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [activityAuditLogReqVO.id,id]; arguments []; default message [id]]; default message [审核编号不能为空]\nField error in object 'activityAuditLogReqVO' on field 'auditReason': rejected value [null]; codes [NotBlank.activityAuditLogReqVO.auditReason,NotBlank.auditReason,NotBlank.java.lang.String,NotBlank]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [activityAuditLogReqVO.auditReason,auditReason]; arguments []; default message [auditReason]]; default message [审核结果理由不能为空]\n\tat org.springframework.web.method.annotation.ModelAttributeMethodProcessor.resolveArgument(ModelAttributeMethodProcessor.java:175)\n\tat org.springframework.web.method.support.HandlerMethodArgumentResolverComposite.resolveArgument(HandlerMethodArgumentResolverComposite.java:122)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.getMethodArgumentValues(InvocableHandlerMethod.java:179)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:146)\n\tat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117)\n\tat org.springframework.web.servlet.mvc",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "42cef5ad68f4335619a3ef31eda1c5b915eaf5ca": {
+    "count": 4,
+    "first_seen": "2026-01-09T06:40:25.528Z",
+    "last_seen": "2026-01-09T07:04:43.754Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-activity",
+    "pod": "exchange-activity-5bc4b7b654-tpf9f",
+    "sample": "[handleBindException]\n\norg.springframework.validation.BindException: org.springframework.validation.BeanPropertyBindingResult: 3 errors\nField error in object 'activityAuditLogReqVO' on field 'id': rejected value [null]; codes [NotNull.activityAuditLogReqVO.id,NotNull.id,NotNull.java.lang.Long,NotNull]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [activityAuditLogReqVO.id,id]; arguments []; default message [id]]; default message [审核编号不能为空]\nField error in object 'activityAuditLogReqVO' on field 'auditReason': rejected value [null]; codes [NotBlank.activityAuditLogReqVO.auditReason,NotBlank.auditReason,NotBlank.java.lang.String,NotBlank]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [activityAuditLogReqVO.auditReason,auditReason]; arguments []; default message [auditReason]]; default message [审核结果理由不能为空]\nField error in object 'activityAuditLogReqVO' on field 'auditStatus': rejected value [null]; codes [NotNull.activityAuditLogReqVO.auditStatus,NotNull.auditStatus,NotNull.java.lang.Integer,NotNull]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [activityAuditLogReqVO.auditStatus,auditStatus]; arguments []; default message [auditStatus]]; default message [审核结果不能为空]\n\tat org.springframework.web.method.annotation.ModelAttributeMethodProcessor.resolveArgument(ModelAttributeMethodProcessor.java:175)\n\tat org.springframework.web.method.support.HandlerMethodArgumentResolverComposite.resolveArgument(HandlerMethodArgumentResolverComposite.java:122)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.getMethodArgumentValues(InvocableHandlerMethod.java:179)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:146)\n\tat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117)\n\tat org.springframework.web.servlet.mvc",
+    "history": [
+      1767916584,
+      1767916584,
+      1767916584,
+      1767916584
+    ],
+    "last_alert_ts": 1767916584
+  },
+  "49a6846bd67ab7239a082fa9247084767563d4f8": {
+    "count": 1,
+    "first_seen": "2026-01-09T06:42:29.963Z",
+    "last_seen": "2026-01-09T06:42:29.963Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-59bf4cf8d-k79tv",
+    "sample": "defaultEventExecutorGroup-5-3 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: ping\n2026-01-09 06:42:30.599 |  INFO 1 | defaultEventExecutorGroup-5-3 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: ping\n2026-01-09 06:42:30.703 |  INFO 1 | defaultEventExecutorGroup-5-2 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: ping\n2026-01-09 06:42:32.241 |  WARN 1 | pool-3-thread-6 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-22Jx3uEsaY9-gGdsSt0vGQ (ws.s.order.a977e239.queue); Consumer@7f7da6ab: tags=[[amq.ctag-22Jx3uEsaY9-gGdsSt0vGQ]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,1), conn: Proxy@2235153c Shared Rabbit Connection: SimpleConnection@2b4ce8f3 [delegate=amqp://ws@192.168.12.2:5672/, localPort= 45342], acknowledgeMode=AUTO local queue size=0\n2026-01-09 06:42:32.261 |  WARN 1 | pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-UlzZMrrUyemBJSOGnMGpCQ (ws.s.mp.a977e239.queue); Consumer@9d7522: tags=[[amq.ctag-UlzZMrrUyemBJSOGnMGpCQ]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,2), conn: Proxy@2235153c Shared Rabbit Connection: SimpleConnection@2b4ce8f3 [delegate=amqp://ws@192.168.12.2:5672/, localPort= 45342], acknowledgeMode=AUTO local queue size=0\n2026-01-09 06:42:32.291 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-Sb8efIBWO1zhf6yxpDN1jw (ws.s.kline.a977e239.queue); Consumer@29b8a9a9: tags=[[amq.ctag-Sb8efIBWO1zhf6yxpDN1jw]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,3), conn: Proxy@2235153c Shared Rabbit Connection: SimpleConnection@2b4ce8f3 [delegate=amqp://ws@192.168.12.2:5672/, localPort= 45342], acknowledgeMode=AUTO local queue size=0\n2026-01-09 06:42:32.309 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "2ea76ca7f19b56f39b0379a8c8034c4946722a13": {
+    "count": 1,
+    "first_seen": "2026-01-09T06:43:07.749Z",
+    "last_seen": "2026-01-09T06:43:07.749Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-59bf4cf8d-zqnkl",
+    "sample": "pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-x9gVVlJv3xiKpAosPbxlqA (ws.s.order.35600b89.queue); Consumer@6200887c: tags=[[amq.ctag-x9gVVlJv3xiKpAosPbxlqA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,1), conn: Proxy@2eeb14d4 Shared Rabbit Connection: SimpleConnection@6ef27af9 [delegate=amqp://ws@192.168.12.61:5672/, localPort= 38168], acknowledgeMode=AUTO local queue size=0\n2026-01-09 06:43:08.313 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-qyUOEFQq6yySm8uMbkfjvg (ws.s.mp.35600b89.queue); Consumer@4267edd9: tags=[[amq.ctag-qyUOEFQq6yySm8uMbkfjvg]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,2), conn: Proxy@2eeb14d4 Shared Rabbit Connection: SimpleConnection@6ef27af9 [delegate=amqp://ws@192.168.12.61:5672/, localPort= 38168], acknowledgeMode=AUTO local queue size=0\n2026-01-09 06:43:08.341 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-9oDpaaswxqk5gITUhfxf-Q (ws.s.kline.35600b89.queue); Consumer@38308731: tags=[[amq.ctag-9oDpaaswxqk5gITUhfxf-Q]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,3), conn: Proxy@2eeb14d4 Shared Rabbit Connection: SimpleConnection@6ef27af9 [delegate=amqp://ws@192.168.12.61:5672/, localPort= 38168], acknowledgeMode=AUTO local queue size=0",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "ddea802ce272d4f1ed5189a1659c187b03da27cf": {
+    "count": 1,
+    "first_seen": "2026-01-09T06:43:10.988214226Z",
+    "last_seen": "2026-01-09T06:43:10.988214226Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-59bf4cf8d-zqnkl",
+    "sample": "pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-o7Q4sLvfHkwidu0CNIl58Q (ws.s.increase.35600b89.queue); Consumer@4cdedf52: tags=[[amq.ctag-o7Q4sLvfHkwidu0CNIl58Q]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,5), conn: Proxy@2eeb14d4 Shared Rabbit Connection: SimpleConnection@6ef27af9 [delegate=amqp://ws@192.168.12.61:5672/, localPort= 38168], acknowledgeMode=AUTO local queue size=0\n2026-01-09 06:43:08.407 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-zE93r2nsTVzbVqp0x5fkMA (ws.s.cache.35600b89.queue); Consumer@f03d81a: tags=[[amq.ctag-zE93r2nsTVzbVqp0x5fkMA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,6), conn: Proxy@2eeb14d4 Shared Rabbit Connection: SimpleConnection@6ef27af9 [delegate=amqp://ws@192.168.12.61:5672/, localPort= 38168], acknowledgeMode=AUTO local queue size=0\n2026-01-09 06:43:08.422 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-4d-BpGOLsfWvOcevbQD68w (ws.s.msg.forward.35600b89.queue); Consumer@5a405492: tags=[[amq.ctag-4d-BpGOLsfWvOcevbQD68w]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.61:5672/,7), conn: Proxy@2eeb14d4 Shared Rabbit Connection: SimpleConnection@6ef27af9 [delegate=amqp://ws@192.168.12.61:5672/, localPort= 38168], acknowledgeMode=AUTO local queue size=0\n2026-01-09 06:43:08.428 |  INFO 1 | Thread-9 [TID: N/A] com.xxl.job.core.server.EmbedServer      | >>>>>>>>>>> xxl-job remoting server stop.\n2026-01-09 06:43:08.431 |  INFO 1 | xxl-job, executor ExecutorRegistryThread [TID: N/A] c.x.j.c.thread.ExecutorRegistryThread    | >>>>>>>>>>> xxl-job registry-remove success, registryParam:RegistryParam{registryGroup='EXECUTOR', registryKey='exchange-ws', registryValue='http://172.20.89.222:18091/'}, reg",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "26c4f7287297108aa028a467033ba9e4fd4b7621": {
+    "count": 1,
+    "first_seen": "2026-01-09T06:44:17.961Z",
+    "last_seen": "2026-01-09T06:44:17.961Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-activity",
+    "pod": "exchange-activity-5bc4b7b654-d58nr",
+    "sample": "[handleBindException]\n\norg.springframework.validation.BindException: org.springframework.validation.BeanPropertyBindingResult: 3 errors\nField error in object 'activityAuditLogReqVO' on field 'id': rejected value [null]; codes [NotNull.activityAuditLogReqVO.id,NotNull.id,NotNull.java.lang.Long,NotNull]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [activityAuditLogReqVO.id,id]; arguments []; default message [id]]; default message [审核编号不能为空]\nField error in object 'activityAuditLogReqVO' on field 'auditReason': rejected value [null]; codes [NotBlank.activityAuditLogReqVO.auditReason,NotBlank.auditReason,NotBlank.java.lang.String,NotBlank]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [activityAuditLogReqVO.auditReason,auditReason]; arguments []; default message [auditReason]]; default message [审核结果理由不能为空]\nField error in object 'activityAuditLogReqVO' on field 'auditStatus': rejected value [null]; codes [NotNull.activityAuditLogReqVO.auditStatus,NotNull.auditStatus,NotNull.java.lang.Integer,NotNull]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [activityAuditLogReqVO.auditStatus,auditStatus]; arguments []; default message [auditStatus]]; default message [审核结果不能为空]\n\tat org.springframework.web.method.annotation.ModelAttributeMethodProcessor.resolveArgument(ModelAttributeMethodProcessor.java:175)\n\tat org.springframework.web.method.support.HandlerMethodArgumentResolverComposite.resolveArgument(HandlerMethodArgumentResolverComposite.java:122)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.getMethodArgumentValues(InvocableHandlerMethod.java:179)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:146)\n\tat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117)\n\tat org.springframework.web.servlet.mvc",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "04ac9fa56359ad10af28348d3365ea8e335bbcab": {
+    "count": 2,
+    "first_seen": "2026-01-09T06:58:22.712Z",
+    "last_seen": "2026-01-09T06:59:21.363Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-activity",
+    "pod": "exchange-activity-5bc4b7b654-d58nr",
+    "sample": "[handleBindException]\n\norg.springframework.validation.BindException: org.springframework.validation.BeanPropertyBindingResult: 3 errors\nField error in object 'activityAuditLogReqVO' on field 'auditReason': rejected value [null]; codes [NotBlank.activityAuditLogReqVO.auditReason,NotBlank.auditReason,NotBlank.java.lang.String,NotBlank]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [activityAuditLogReqVO.auditReason,auditReason]; arguments []; default message [auditReason]]; default message [审核结果理由不能为空]\nField error in object 'activityAuditLogReqVO' on field 'auditStatus': rejected value [null]; codes [NotNull.activityAuditLogReqVO.auditStatus,NotNull.auditStatus,NotNull.java.lang.Integer,NotNull]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [activityAuditLogReqVO.auditStatus,auditStatus]; arguments []; default message [auditStatus]]; default message [审核结果不能为空]\nField error in object 'activityAuditLogReqVO' on field 'id': rejected value [null]; codes [NotNull.activityAuditLogReqVO.id,NotNull.id,NotNull.java.lang.Long,NotNull]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [activityAuditLogReqVO.id,id]; arguments []; default message [id]]; default message [审核编号不能为空]\n\tat org.springframework.web.method.annotation.ModelAttributeMethodProcessor.resolveArgument(ModelAttributeMethodProcessor.java:175)\n\tat org.springframework.web.method.support.HandlerMethodArgumentResolverComposite.resolveArgument(HandlerMethodArgumentResolverComposite.java:122)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.getMethodArgumentValues(InvocableHandlerMethod.java:179)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:146)\n\tat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117)\n\tat org.springframework.web.servlet.mvc",
+    "history": [
+      1767916584,
+      1767916584
+    ],
+    "last_alert_ts": 1767916584
+  },
+  "c3138643eb75be58db4d24c3b77ecf5ca0e94c5c": {
+    "count": 1,
+    "first_seen": "2026-01-09T07:52:33.943Z",
+    "last_seen": "2026-01-09T07:52:33.943Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-575bd9bc55-l9t2x",
+    "sample": "pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-FtxTmguUgmGFLFn58qBU7g (ws.s.order.b14160e0.queue); Consumer@6ac7e58e: tags=[[amq.ctag-FtxTmguUgmGFLFn58qBU7g]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,1), conn: Proxy@58e21dde Shared Rabbit Connection: SimpleConnection@7ac13392 [delegate=amqp://ws@192.168.12.2:5672/, localPort= 45756], acknowledgeMode=AUTO local queue size=0\n2026-01-09 07:52:35.581 |  WARN 1 | pool-3-thread-6 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-7QUuq071wFMasbCmzbE-4Q (ws.s.mp.b14160e0.queue); Consumer@4016ec40: tags=[[amq.ctag-7QUuq071wFMasbCmzbE-4Q]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,2), conn: Proxy@58e21dde Shared Rabbit Connection: SimpleConnection@7ac13392 [delegate=amqp://ws@192.168.12.2:5672/, localPort= 45756], acknowledgeMode=AUTO local queue size=0\n2026-01-09 07:52:35.595 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-HByIqoYf_McK_OrR5RuWDg (ws.s.kline.b14160e0.queue); Consumer@60873af4: tags=[[amq.ctag-HByIqoYf_McK_OrR5RuWDg]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,3), conn: Proxy@58e21dde Shared Rabbit Connection: SimpleConnection@7ac13392 [delegate=amqp://ws@192.168.12.2:5672/, localPort= 45756], acknowledgeMode=AUTO local queue size=0\n2026-01-09 07:52:35.609 |  WARN 1 | pool-3-thread-3 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-urPP-0czza8l0Eqq-IZdNQ (ws.s.handicap.b14160e0.queue); Consumer@9d7522: tags=[[amq.ctag-urPP-0czza8l0Eqq-IZdNQ]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,4), conn: Proxy@58e21dde Shared Rabbit Connection: SimpleConnection@7ac13392 [delegate=amqp://ws@192.168.12.2:5672",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "a208b3786cd9d820f069d084825a13245b37c15d": {
+    "count": 1,
+    "first_seen": "2026-01-09T07:53:09.744Z",
+    "last_seen": "2026-01-09T07:53:09.744Z",
+    "last_seen_ts": 1767916584,
+    "service": "exchange-ws",
+    "pod": "exchange-ws-575bd9bc55-ss268",
+    "sample": "defaultEventExecutorGroup-5-2 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: ping\n2026-01-09 07:53:10.562 |  INFO 1 | defaultEventExecutorGroup-5-3 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: ping\n2026-01-09 07:53:10.735 |  INFO 1 | defaultEventExecutorGroup-5-4 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: ping\n2026-01-09 07:53:11.041 |  INFO 1 | defaultEventExecutorGroup-5-1 [TID: N/A] c.q.e.w.w.handler.MessageWsHandler_      | 📩 收到消息: ping\n2026-01-09 07:53:11.425 |  WARN 1 | pool-3-thread-5 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-_yo9mNdZjkv_pw9SIWP40w (ws.s.order.44928014.queue); Consumer@602d7631: tags=[[amq.ctag-_yo9mNdZjkv_pw9SIWP40w]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,1), conn: Proxy@105cb38b Shared Rabbit Connection: SimpleConnection@2c18cde7 [delegate=amqp://ws@192.168.12.2:5672/, localPort= 56340], acknowledgeMode=AUTO local queue size=0\n2026-01-09 07:53:11.446 |  WARN 1 | pool-3-thread-6 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-n0gJ3zdyQ11n8ML5o_KnqA (ws.s.mp.44928014.queue); Consumer@d7e5d99: tags=[[amq.ctag-n0gJ3zdyQ11n8ML5o_KnqA]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,2), conn: Proxy@105cb38b Shared Rabbit Connection: SimpleConnection@2c18cde7 [delegate=amqp://ws@192.168.12.2:5672/, localPort= 56340], acknowledgeMode=AUTO local queue size=0\n2026-01-09 07:53:11.463 |  WARN 1 | pool-3-thread-4 [TID: N/A] o.s.a.r.listener.BlockingQueueConsumer   | Cancel received for amq.ctag-fnKRIoZeXHWhupFNtRrx8A (ws.s.kline.44928014.queue); Consumer@5b2a23e9: tags=[[amq.ctag-fnKRIoZeXHWhupFNtRrx8A]], channel=Cached Rabbit Channel: PublisherCallbackChannelImpl: AMQChannel(amqp://ws@192.168.12.2:5672/,3), conn: Proxy@105cb38b Shared Rabbit Connection: SimpleConnection@2c18cde7 [delegate=amqp://ws@192.168.12.2",
+    "history": [
+      1767916584
+    ],
+    "last_alert_ts": 0
+  },
+  "_meta": {
+    "last_run_ts": 1767945189
+  }
+}
