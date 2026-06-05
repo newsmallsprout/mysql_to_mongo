@@ -24,18 +24,52 @@ frontend/src/views/Releases/Index.vue
 ## 一键应用（在 v1.0.7 代码根目录）
 
 ```bash
-cd /path/to/shark-Platform
-bash patch/releases-feature/apply-patch.sh
+cd /root/ops-v1.0.7-code
+bash patch/apply-patch.sh
 ```
 
-## 环境变量（K8s Secret / docker-compose）
+补丁目录结构（**不是** `patch/releases-feature/`）：
+
+```
+/root/ops-v1.0.7-code/patch/
+  apply-patch.sh
+  releases/
+  frontend/
+  README.md
+```
+
+从 git 仓库更新 patch 文件：
 
 ```bash
+cd /root/ops/shark-Platform && git pull
+cp -r patch/releases-feature/* /root/ops-v1.0.7-code/patch/
+cd /root/ops-v1.0.7-code && bash patch/apply-patch.sh
+```
+
+## 环境变量（K8s Secret / ConfigMap）
+
+```bash
+# Argo CD 连接（Secret 放密码/Token）
 ARGOCD_URL=https://your-argocd.example.com
 ARGOCD_USERNAME=admin
 ARGOCD_PASSWORD=xxx
 ECR_WEBHOOK_TOKEN=xxx
+
+# 自动映射（ConfigMap，首次 ECR push 自动建 Release 映射）
+ARGOCD_DEFAULT_PROJECT=etz-prd-project
+ARGOCD_DEFAULT_REPO_URL=197461532043.dkr.ecr.ap-northeast-1.amazonaws.com
+ARGOCD_CHART_PREFIX=helm-main
+RELEASE_APP_NAME_MODE=upper          # exchange-activity → EXCHANGE-ACTIVITY
+RELEASE_AUTO_CREATE_MAPPING=true     # 设为 false 则恢复纯手动映射
 ```
+
+### 自动映射规则
+
+| ECR 事件字段 | 自动生成 |
+|---|---|
+| `repository-name: exchange-activity` | Argo App = `EXCHANGE-ACTIVITY` |
+| 同上 | Chart Path = `helm-main/exchange-activity` |
+| 同上 | Project / Repo URL = 环境变量默认值 |
 
 ## 打镜像
 

@@ -4,6 +4,7 @@ from django.db import transaction
 
 from ..models import ReleaseAppConfig, ReleaseRecord
 from .argocd import ArgoCDClient, ArgoCDError
+from .mapping import resolve_app_config
 
 logger = logging.getLogger(__name__)
 
@@ -67,10 +68,9 @@ def handle_ecr_webhook(detail):
     if not repository or not image_tag:
         return None, 'missing repository-name or image-tag'
 
-    try:
-        app_config = ReleaseAppConfig.objects.get(ecr_repository=repository, enabled=True)
-    except ReleaseAppConfig.DoesNotExist:
-        return None, f'no mapping for repository: {repository}'
+    app_config, auto_created = resolve_app_config(repository)
+    if app_config is None:
+        return None, auto_created
 
     record = apply_release(
         app_config,
@@ -79,7 +79,8 @@ def handle_ecr_webhook(detail):
         raw_event=detail,
         image_digest=image_digest,
     )
-    return record, 'ok'
+    message = 'ok (auto-created mapping)' if auto_created else 'ok'
+    return record, message
 
 
 def rollback_release(app_config, image_tag, operator=None):

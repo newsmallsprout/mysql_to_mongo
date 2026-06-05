@@ -3,7 +3,7 @@
     <div class="page-header">
       <div class="header-info">
         <h2 class="page-title">发版管理</h2>
-        <p class="page-subtitle">ECR 推送 → Argo CD 目标版本更新 → 人工 Sync</p>
+        <p class="page-subtitle">ECR 推送 → 自动映射 → Argo CD 目标版本更新 → 人工 Sync</p>
       </div>
       <div class="header-actions">
         <el-tag v-if="!argocdConfigured" type="warning">Argo CD 未配置</el-tag>
@@ -120,6 +120,13 @@
       </el-tab-pane>
 
       <el-tab-pane label="映射配置" name="config">
+        <el-alert
+          type="info"
+          :closable="false"
+          show-icon
+          class="config-hint"
+          title="首次 ECR 推送会自动创建映射（需配置 ARGOCD_DEFAULT_REPO_URL 等环境变量）；此处可查看或手动调整。"
+        />
         <div class="toolbar">
           <el-button type="primary" @click="openConfigDialog()">添加映射</el-button>
         </div>
@@ -453,6 +460,10 @@ onMounted(async () => {
 }
 
 .toolbar {
+  margin-bottom: 16px;
+}
+
+.config-hint {
   margin-bottom: 16px;
 }
 </style>
