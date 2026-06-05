@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'ai_ops',
     'db_manager',
     'traffic',
+    'releases',
 ]
 
 MIDDLEWARE = [
@@ -218,5 +219,16 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        'releases': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
     },
 }
+
+# Argo CD release management
+ARGOCD_URL = os.environ.get('ARGOCD_URL', '')
+ARGOCD_USERNAME = os.environ.get('ARGOCD_USERNAME', '')
+ARGOCD_PASSWORD = os.environ.get('ARGOCD_PASSWORD', '')
+ECR_WEBHOOK_TOKEN = os.environ.get('ECR_WEBHOOK_TOKEN', '')

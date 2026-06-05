@@ -90,6 +90,12 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'Deploy', icon: 'Upload', viewPerm: 'view_deploy' }
       },
       {
+        path: 'releases',
+        name: 'Releases',
+        component: () => import('@/views/Releases/Index.vue'),
+        meta: { title: 'Releases', icon: 'Promotion' }
+      },
+      {
         path: 'permissions',
         name: 'Permissions',
         component: () => import('@/views/Permissions/Index.vue'),

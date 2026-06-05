@@ -60,6 +60,10 @@
           <el-icon><Upload /></el-icon>
           <template #title>Deployment</template>
         </el-menu-item>
+        <el-menu-item index="/releases">
+          <el-icon><Promotion /></el-icon>
+          <template #title>Release Mgmt</template>
+        </el-menu-item>
         <el-menu-item index="/permissions" v-if="isAdmin">
           <el-icon><Lock /></el-icon>
           <template #title>Access Control</template>
@@ -78,7 +82,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { Odometer, List, Link, Monitor, Setting, Upload, Fold, Expand, Lock, Calendar, Cpu } from '@element-plus/icons-vue'
+import { Odometer, List, Link, Monitor, Setting, Upload, Fold, Expand, Lock, Calendar, Cpu, Promotion } from '@element-plus/icons-vue'
 import { useSystemStore } from '@/stores/system'
 
 const route = useRoute()
