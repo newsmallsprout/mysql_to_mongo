@@ -66,7 +66,5 @@ grep -q 'index="/releases"' "$ROOT/frontend/src/components/Layout/AppSidebar.vue
 grep -q 'Promotion' "$ROOT/frontend/src/components/Layout/AppSidebar.vue" || \
   sed -i 's/Cpu } from/Cpu, Promotion } from/' "$ROOT/frontend/src/components/Layout/AppSidebar.vue"
 
-echo "==> Done. Next steps:"
-echo "  1. cd frontend && npm install && npm run build"
-echo "  2. docker build -t 197461532043.dkr.ecr.ap-northeast-1.amazonaws.com/etz/ops:v1.0.8 ."
-echo "  3. docker push ..."
+echo "==> Done. Release feature patched into codebase."
+echo "    Build v1.0.8 image with your own script when ready."

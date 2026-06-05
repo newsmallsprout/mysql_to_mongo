@@ -37,22 +37,15 @@ ARGOCD_PASSWORD=xxx
 ECR_WEBHOOK_TOKEN=xxx
 ```
 
-## 打镜像 & 推送
+## 打镜像
+
+本补丁脚本**只做代码改动**，不包含构建、登录 ECR、推送等操作。  
+代码改完后，用你们自己的脚本打 **v1.0.8** 镜像并上传即可。
 
 ```bash
-# 1. 构建前端（Dockerfile 多阶段也会 build，本地可先验证）
-cd frontend && npm install && npm run build && cd ..
-
-# 2. 登录 ECR（按实际账号改 registry 域名）
-aws ecr get-login-password --region ap-northeast-1 \
-  | docker login --username AWS --password-stdin \
-    197461532043.dkr.ecr.ap-northeast-1.amazonaws.com
-
-# 3. 构建
-docker build -t 197461532043.dkr.ecr.ap-northeast-1.amazonaws.com/etz/ops:v1.0.8 .
-
-# 4. 推送
-docker push 197461532043.dkr.ecr.ap-northeast-1.amazonaws.com/etz/ops:v1.0.8
+cd /path/to/ops-v1.0.7-code
+bash patch/releases-feature/apply-patch.sh
+# 然后执行你们现有的 build / push 脚本，tag 用 v1.0.8
 ```
 
 ## API 端点
